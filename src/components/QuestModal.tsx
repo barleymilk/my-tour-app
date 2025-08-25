@@ -146,7 +146,7 @@ const QuestModal = ({
           <div>
             <h3 className="text-xl mb-2 font-semibold">📋 미션 목록</h3>
             <div>
-              <div className="space-y-3">
+              <div className="space-y-3 ">
                 {quest?.missions.map((missionItem) => {
                   const status = getMissionStatus(
                     missionItem.mission_id,
@@ -155,7 +155,7 @@ const QuestModal = ({
                   return (
                     <div
                       key={missionItem.mission_id}
-                      className="flex items-center gap-3 p-3 border rounded-lg"
+                      className="flex items-center gap-3 p-3 border rounded-lg bg-white"
                       onClick={() => {
                         onMissionClick(missionItem);
                       }}

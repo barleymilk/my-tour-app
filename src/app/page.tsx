@@ -31,7 +31,10 @@ export default function Home() {
       <Header title="My Tour App" />
       <main className="mx-6 pb-24 pt-6">
         <div className="flex items-center gap-2">
-          <Input placeholder="Search..." className="rounded-full h-12" />
+          <Input
+            placeholder="Search..."
+            className="rounded-full h-12 bg-white"
+          />
           <Button className="h-12">Search</Button>
         </div>
 
@@ -77,7 +80,12 @@ export default function Home() {
                 </CardContent>
               </Card>
             ))}
-            <Button className="w-full h-12">더보기</Button>
+            <Button
+              className="w-full h-12"
+              onClick={() => (window.location.href = "/quests")}
+            >
+              더보기
+            </Button>
           </div>
         </div>
 
@@ -113,16 +121,16 @@ export default function Home() {
           </ScrollArea>
         </div>
 
-        <div className="mt-6 mb-6 bg-blue-500 rounded-lg p-6">
-          <h2 className="text-xl font-bold text-center mb-4 text-white">
+        <div className="mt-6 mb-6 bg-white rounded-lg p-6">
+          <h2 className="text-xl font-bold text-center mb-4 text-black">
             배지 현황
           </h2>
           <ScrollArea className="w-full">
-            <div className="flex gap-4 w-max">
+            <div className="flex gap-4 w-max py-2">
               {badges.map((badge) => (
                 <div
                   key={badge.badge_id}
-                  className="rounded-full border-4 border-red-500 w-18 h-18 p-2 bg-white flex-shrink-0"
+                  className="rounded-full border-4 border-primary w-18 h-18 p-2 flex-shrink-0"
                 >
                   <Image
                     src={badge.image_url}
