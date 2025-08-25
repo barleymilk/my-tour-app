@@ -1,4 +1,4 @@
-import { Quest } from "./types";
+import { Quest, MissionType } from "./types";
 
 export const quests: Quest[] = [
   {
@@ -23,10 +23,30 @@ export const quests: Quest[] = [
         place_id: "PL-GNG-001",
         place_name: "경포 해변",
         coordinates: { lat: 37.8045, lng: 128.8963 },
-        type: "GPS_and_Action",
-        condition: "경포 해변에서 1시간 이상 머문 후, 파도 소리 15초 녹음",
+        type: "GPS_AND_MULTIPLE" as MissionType,
+        condition: "경포 해변에서 파도 소리 15초 녹음",
         order: 1,
         reward_badge_id: "BDG-001",
+        completion: {
+          gps_required: true,
+          inputs: [
+            {
+              type: "audio",
+              required: true,
+              min_duration: 15,
+              max_duration: 60,
+              file_types: ["audio/mp3", "audio/wav", "audio/m4a"],
+              max_file_size: 10,
+            },
+          ],
+          additional_conditions: ["해변에서 파도 소리 녹음"],
+        },
+        difficulty: "easy",
+        estimated_duration: 60,
+        tips: [
+          "조용한 시간대에 녹음하면 더 좋은 품질을 얻을 수 있어요",
+          "파도 소리가 잘 들리는 위치를 찾아보세요",
+        ],
       },
       {
         mission_id: "MR-GNG-001-02",
@@ -36,11 +56,37 @@ export const quests: Quest[] = [
         place_id: "PL-GNG-002",
         place_name: "안목해변 커피거리",
         coordinates: { lat: 37.7892, lng: 128.8956 },
-        type: "GPS_and_Action",
-        condition:
-          "안목해변 커피거리에서 30분 이상 머문 후, 카페에서 음료 주문하기",
+        type: "GPS_AND_MULTIPLE" as MissionType,
+        condition: "안목해변 커피거리의 카페에서 음료 주문하기",
         order: 2,
         reward_badge_id: "BDG-002",
+        completion: {
+          gps_required: true,
+          inputs: [
+            {
+              type: "purchase",
+              required: true,
+              purchase_min_amount: 5000,
+              purchase_categories: ["음료", "커피", "카페"],
+            },
+            {
+              type: "photo",
+              required: true,
+              file_types: ["image/jpeg", "image/png"],
+              max_file_size: 5,
+            },
+          ],
+          additional_conditions: [
+            "카페에서 음료 구매",
+            "커피거리 풍경 사진 촬영",
+          ],
+        },
+        difficulty: "easy",
+        estimated_duration: 45,
+        tips: [
+          "해변을 바라보는 자리에서 커피를 마시면 더 특별한 경험이 될 거예요",
+          "일몰 시간대가 가장 아름다워요",
+        ],
       },
       {
         mission_id: "MR-GNG-001-03",
@@ -50,10 +96,38 @@ export const quests: Quest[] = [
         place_id: "PL-GNG-003",
         place_name: "강릉중앙시장",
         coordinates: { lat: 37.7519, lng: 128.8765 },
-        type: "GPS_and_Action",
-        condition: "강릉중앙시장에서 1시간 이상 머문 후, 5,000원 이상 지출",
+        type: "GPS_AND_MULTIPLE" as MissionType,
+        condition: "강릉중앙시장에서 5,000원 이상 지출",
         order: 3,
         reward_badge_id: "BDG-003",
+        completion: {
+          gps_required: true,
+          inputs: [
+            {
+              type: "purchase",
+              required: true,
+              purchase_min_amount: 5000,
+              purchase_categories: ["음식", "기념품", "특산품"],
+            },
+            {
+              type: "text",
+              required: true,
+              min_length: 20,
+              max_length: 200,
+              hint: "시장에서 느낀 감정이나 경험을 자유롭게 적어주세요",
+            },
+          ],
+          additional_conditions: [
+            "시장에서 5,000원 이상 구매",
+            "시장 경험 후기 작성",
+          ],
+        },
+        difficulty: "medium",
+        estimated_duration: 90,
+        tips: [
+          "시장의 대표 음식을 꼭 맛보세요",
+          "상인들과 대화하면 더 재미있는 이야기를 들을 수 있어요",
+        ],
       },
     ],
   },
@@ -79,10 +153,29 @@ export const quests: Quest[] = [
         place_id: "PL-JNJ-001",
         place_name: "전주 한옥마을",
         coordinates: { lat: 35.815, lng: 127.153 },
-        type: "GPS_and_Action",
+        type: "GPS_AND_PHOTO" as MissionType,
         condition: "한복 대여 후 한복 착용 인증 사진 업로드",
         order: 1,
         reward_badge_id: "BDG-004",
+        completion: {
+          gps_required: true,
+          inputs: [
+            {
+              type: "photo",
+              required: true,
+              file_types: ["image/jpeg", "image/png"],
+              max_file_size: 5,
+              hint: "한복을 입고 한옥마을에서 사진을 찍어주세요",
+            },
+          ],
+          additional_conditions: ["한복 착용", "한옥마을 배경 사진 촬영"],
+        },
+        difficulty: "easy",
+        estimated_duration: 60,
+        tips: [
+          "한복 대여소에서 전문가의 도움을 받으면 더 아름답게 착용할 수 있어요",
+          "한옥마을의 전통적인 건물을 배경으로 사진을 찍어보세요",
+        ],
       },
       {
         mission_id: "MR-JNJ-001-02",
@@ -92,10 +185,39 @@ export const quests: Quest[] = [
         place_id: "PL-JNJ-002",
         place_name: "전주 한지박물관",
         coordinates: { lat: 35.812, lng: 127.15 },
-        type: "GPS_and_Action",
+        type: "GPS_AND_MULTIPLE" as MissionType,
         condition: "한지 공예품 만들기 체험 후 인증",
         order: 2,
         reward_badge_id: "BDG-005",
+        completion: {
+          gps_required: true,
+          inputs: [
+            {
+              type: "photo",
+              required: true,
+              file_types: ["image/jpeg", "image/png"],
+              max_file_size: 5,
+            },
+            {
+              type: "text",
+              required: true,
+              min_length: 30,
+              max_length: 300,
+              hint: "한지 만들기 체험에서 느낀 점과 만든 작품에 대한 설명을 적어주세요",
+            },
+          ],
+          additional_conditions: [
+            "한지 공예품 제작",
+            "체험 과정 사진 촬영",
+            "체험 후기 작성",
+          ],
+        },
+        difficulty: "medium",
+        estimated_duration: 120,
+        tips: [
+          "체험 전에 예약을 하는 것이 좋아요",
+          "만든 한지에 특별한 메시지를 적어보세요",
+        ],
       },
       {
         mission_id: "MR-JNJ-001-03",
@@ -105,10 +227,40 @@ export const quests: Quest[] = [
         place_id: "PL-JNJ-003",
         place_name: "전주 한옥마을",
         coordinates: { lat: 35.815, lng: 127.153 },
-        type: "GPS_and_Action",
+        type: "GPS_AND_MULTIPLE" as MissionType,
         condition: "한지 등불 들고 야간 산책 후 인증",
         order: 3,
         reward_badge_id: "BDG-006",
+        completion: {
+          gps_required: true,
+          inputs: [
+            {
+              type: "photo",
+              required: true,
+              file_types: ["image/jpeg", "image/png"],
+              max_file_size: 5,
+            },
+            {
+              type: "audio",
+              required: true,
+              min_duration: 20,
+              max_duration: 120,
+              file_types: ["audio/mp3", "audio/wav"],
+              max_file_size: 10,
+            },
+          ],
+          additional_conditions: [
+            "등불 들고 야간 산책",
+            "밤하늘과 등불 사진 촬영",
+            "야간 산책 소리 녹음",
+          ],
+        },
+        difficulty: "hard",
+        estimated_duration: 60,
+        tips: [
+          "일몰 후 1-2시간이 가장 아름다워요",
+          "등불을 안전하게 들고 산책하세요",
+        ],
       },
     ],
   },
@@ -134,10 +286,32 @@ export const quests: Quest[] = [
         place_id: "PL-JEJ-001",
         place_name: "섭지코지",
         coordinates: { lat: 33.4584, lng: 126.942 },
-        type: "GPS_and_Photo",
-        condition: "섭지코지에서 1시간 이상 머문 후, 특정 구도에서 사진 촬영",
+        type: "GPS_AND_PHOTO" as MissionType,
+        condition: "섭지코지에서 특정 구도에서 사진 촬영",
         order: 1,
         reward_badge_id: "BDG-007",
+        completion: {
+          gps_required: true,
+          inputs: [
+            {
+              type: "photo",
+              required: true,
+              file_types: ["image/jpeg", "image/png"],
+              max_file_size: 5,
+              hint: "성산일출봉과 바다가 함께 보이는 구도로 사진을 찍어주세요",
+            },
+          ],
+          additional_conditions: [
+            "섭지코지에서 사진 촬영",
+            "성산일출봉과 바다 풍경 사진 촬영",
+          ],
+        },
+        difficulty: "medium",
+        estimated_duration: 90,
+        tips: [
+          "일출 시간대가 가장 아름다워요",
+          "바람이 강할 수 있으니 안전에 유의하세요",
+        ],
       },
       {
         mission_id: "MR-JEJ-001-02",
@@ -147,10 +321,31 @@ export const quests: Quest[] = [
         place_id: "PL-JEJ-002",
         place_name: "비자림",
         coordinates: { lat: 33.3867, lng: 126.7994 },
-        type: "GPS_and_Action",
-        condition: "비자림에서 2시간 이상 머문 후, 숲의 소리 30초 녹음",
+        type: "GPS_AND_AUDIO" as MissionType,
+        condition: "비자림에서 숲의 소리 30초 녹음",
         order: 2,
         reward_badge_id: "BDG-008",
+        completion: {
+          gps_required: true,
+          inputs: [
+            {
+              type: "audio",
+              required: true,
+              min_duration: 30,
+              max_duration: 180,
+              file_types: ["audio/mp3", "audio/wav"],
+              max_file_size: 15,
+              hint: "숲의 고요한 소리, 새소리, 바람 소리 등을 녹음해주세요",
+            },
+          ],
+          additional_conditions: ["비자림 방문", "숲의 자연 소리 녹음"],
+        },
+        difficulty: "medium",
+        estimated_duration: 150,
+        tips: [
+          "조용한 시간대에 방문하면 더 좋은 소리를 녹음할 수 있어요",
+          "숲길을 천천히 걸으며 소리에 집중해보세요",
+        ],
       },
       {
         mission_id: "MR-JEJ-001-03",
@@ -160,10 +355,38 @@ export const quests: Quest[] = [
         place_id: "PL-JEJ-003",
         place_name: "서귀포 이중섭거리",
         coordinates: { lat: 33.2496, lng: 126.56 },
-        type: "GPS_and_Purchase",
-        condition: "이중섭거리에서 1시간 이상 머문 후, 예술 작품 1점 구매",
+        type: "GPS_AND_PURCHASE" as MissionType,
+        condition: "이중섭거리에서 예술 작품 1점 구매",
         order: 3,
         reward_badge_id: "BDG-009",
+        completion: {
+          gps_required: true,
+          inputs: [
+            {
+              type: "purchase",
+              required: true,
+              purchase_min_amount: 10000,
+              purchase_categories: ["예술작품", "그림", "공예품"],
+            },
+            {
+              type: "photo",
+              required: true,
+              file_types: ["image/jpeg", "image/png"],
+              max_file_size: 5,
+            },
+          ],
+          additional_conditions: [
+            "이중섭거리 방문",
+            "예술 작품 구매",
+            "작품과 함께 사진 촬영",
+          ],
+        },
+        difficulty: "hard",
+        estimated_duration: 90,
+        tips: [
+          "화가와 대화하면 작품에 대한 이야기를 들을 수 있어요",
+          "작품의 의미를 이해하고 구매해보세요",
+        ],
       },
     ],
   },
@@ -189,10 +412,35 @@ export const quests: Quest[] = [
         place_id: "PL-GYJ-001",
         place_name: "석굴암",
         coordinates: { lat: 35.79, lng: 129.332 },
-        type: "GPS_and_Action",
+        type: "GPS_AND_QUIZ" as MissionType,
         condition: "석굴암 앞에서 지정된 퀴즈 정답 맞추기",
         order: 1,
         reward_badge_id: "BDG-010",
+        completion: {
+          gps_required: true,
+          inputs: [
+            {
+              type: "quiz",
+              required: true,
+              quiz: {
+                type: "multiple_choice",
+                question: "석굴암의 본존불은 어떤 부처인가요?",
+                options: ["아미타불", "비로자나불", "석가모니불", "약사불"],
+                correct_answer: "비로자나불",
+                hint: "석굴암의 본존불은 법신불을 상징합니다",
+                explanation:
+                  "석굴암의 본존불은 비로자나불로, 우주의 진리를 상징하는 법신불입니다.",
+              },
+            },
+          ],
+          additional_conditions: ["석굴암에서 30분 체류", "퀴즈 정답 맞추기"],
+        },
+        difficulty: "medium",
+        estimated_duration: 45,
+        tips: [
+          "석굴암의 역사와 의미를 미리 알아보면 퀴즈를 쉽게 풀 수 있어요",
+          "고요한 마음으로 불상을 바라보세요",
+        ],
       },
       {
         mission_id: "MR-GYJ-001-02",
@@ -202,10 +450,29 @@ export const quests: Quest[] = [
         place_id: "PL-GYJ-002",
         place_name: "동궁과 월지",
         coordinates: { lat: 35.834, lng: 129.219 },
-        type: "GPS_and_Photo",
+        type: "GPS_AND_PHOTO" as MissionType,
         condition: "동궁과 월지 야간 투어 참여 후, 아름다운 야경 사진 업로드",
         order: 2,
         reward_badge_id: "BDG-011",
+        completion: {
+          gps_required: true,
+          inputs: [
+            {
+              type: "photo",
+              required: true,
+              file_types: ["image/jpeg", "image/png"],
+              max_file_size: 5,
+              hint: "연못에 비치는 달빛과 야경을 아름답게 담아주세요",
+            },
+          ],
+          additional_conditions: ["동궁과 월지 방문", "야경 사진 촬영"],
+        },
+        difficulty: "medium",
+        estimated_duration: 75,
+        tips: [
+          "보름달이 뜨는 날이 가장 아름다워요",
+          "야간 투어 시간을 미리 확인하세요",
+        ],
       },
       {
         mission_id: "MR-GYJ-001-03",
@@ -215,10 +482,31 @@ export const quests: Quest[] = [
         place_id: "PL-GYJ-003",
         place_name: "불국사",
         coordinates: { lat: 35.79, lng: 129.332 },
-        type: "GPS_and_Action",
-        condition: "불국사에서 2시간 이상 머문 후, 종소리 녹음하기",
+        type: "GPS_AND_AUDIO" as MissionType,
+        condition: "불국사에서 종소리 녹음하기",
         order: 3,
         reward_badge_id: "BDG-012",
+        completion: {
+          gps_required: true,
+          inputs: [
+            {
+              type: "audio",
+              required: true,
+              min_duration: 20,
+              max_duration: 120,
+              file_types: ["audio/mp3", "audio/wav"],
+              max_file_size: 10,
+              hint: "범종의 울림과 사찰의 고요한 분위기를 녹음해주세요",
+            },
+          ],
+          additional_conditions: ["불국사 방문", "종소리 녹음"],
+        },
+        difficulty: "hard",
+        estimated_duration: 150,
+        tips: [
+          "범종 타종 시간을 미리 확인하세요",
+          "고요한 마음으로 종소리를 들으며 녹음해보세요",
+        ],
       },
     ],
   },
@@ -245,11 +533,29 @@ export const quests: Quest[] = [
         place_id: "PL-BUS-001",
         place_name: "감천문화마을",
         coordinates: { lat: 35.098, lng: 129.01 },
-        type: "GPS_and_Photo",
-        condition:
-          "감천문화마을에서 1시간 이상 머문 후, 지정된 벽화와 함께 사진 촬영",
+        type: "GPS_AND_PHOTO" as MissionType,
+        condition: "감천문화마을에서 지정된 벽화와 함께 사진 촬영",
         order: 1,
         reward_badge_id: "BDG-013",
+        completion: {
+          gps_required: true,
+          inputs: [
+            {
+              type: "photo",
+              required: true,
+              file_types: ["image/jpeg", "image/png"],
+              max_file_size: 5,
+              hint: "마을의 대표적인 벽화와 함께 사진을 찍어주세요",
+            },
+          ],
+          additional_conditions: ["감천문화마을 방문", "벽화 사진 촬영"],
+        },
+        difficulty: "easy",
+        estimated_duration: 75,
+        tips: [
+          "벽화가 잘 보이는 시간대에 방문하세요",
+          "마을의 이야기를 들으며 벽화를 감상해보세요",
+        ],
       },
       {
         mission_id: "MR-BUS-001-02",
@@ -259,11 +565,44 @@ export const quests: Quest[] = [
         place_id: "PL-BUS-002",
         place_name: "자갈치시장",
         coordinates: { lat: 35.098, lng: 129.025 },
-        type: "GPS_and_Action",
-        condition:
-          "자갈치시장에서 1시간 이상 머문 후, 시장 음식점에서 2만 원 이상 지출",
+        type: "GPS_AND_MULTIPLE" as MissionType,
+        condition: "자갈치시장의 음식점에서 2만 원 이상 지출",
         order: 2,
         reward_badge_id: "BDG-014",
+        completion: {
+          gps_required: true,
+          inputs: [
+            {
+              type: "purchase",
+              required: true,
+              purchase_min_amount: 20000,
+              purchase_categories: ["음식", "해산물", "식당"],
+            },
+            {
+              type: "quiz",
+              required: true,
+              quiz: {
+                type: "text",
+                question: "자갈치시장의 마스코트가 무엇인가요?",
+                correct_answer: "자갈치",
+                hint: "시장 이름과 관련이 있어요",
+                explanation:
+                  "자갈치시장의 마스코트는 '자갈치'입니다. 자갈치는 부산 지역에서 많이 잡히는 물고기입니다.",
+              },
+            },
+          ],
+          additional_conditions: [
+            "자갈치시장 방문",
+            "2만원 이상 지출",
+            "퀴즈 정답 맞추기",
+          ],
+        },
+        difficulty: "medium",
+        estimated_duration: 90,
+        tips: [
+          "신선한 해산물을 구분하는 방법을 알아보세요",
+          "시장 상인들과 대화하면 더 재미있는 이야기를 들을 수 있어요",
+        ],
       },
       {
         mission_id: "MR-BUS-001-03",
@@ -273,11 +612,29 @@ export const quests: Quest[] = [
         place_id: "PL-BUS-003",
         place_name: "태종대",
         coordinates: { lat: 35.058, lng: 129.02 },
-        type: "GPS_and_Action",
-        condition:
-          "태종대에서 2시간 이상 머문 후, 절벽 풍경에 대한 감상평 작성",
+        type: "GPS_AND_TEXT" as MissionType,
+        condition: "태종대 방문 후, 절벽 풍경에 대한 감상평 작성",
         order: 3,
         reward_badge_id: "BDG-015",
+        completion: {
+          gps_required: true,
+          inputs: [
+            {
+              type: "text",
+              required: true,
+              min_length: 50,
+              max_length: 500,
+              hint: "태종대의 절벽과 바다 풍경을 보고 느낀 감정과 생각을 자유롭게 적어주세요",
+            },
+          ],
+          additional_conditions: ["태종대 방문", "절벽 풍경 감상평 작성"],
+        },
+        difficulty: "hard",
+        estimated_duration: 150,
+        tips: [
+          "일몰 시간대가 가장 아름다워요",
+          "안전하게 절벽을 바라보며 감상해보세요",
+        ],
       },
     ],
   },

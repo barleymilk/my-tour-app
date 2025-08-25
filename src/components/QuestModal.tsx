@@ -11,13 +11,14 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import NaverMap from "@/components/NaverMap";
-import { Quest, inProgressQuests } from "@/data";
+import { Mission, Quest, inProgressQuests } from "@/data";
 
 interface QuestModalProps {
   isOpen: boolean;
   onClose: () => void;
   quest: Quest | null;
   onRewardClick: () => void;
+  onMissionClick: (mission: Mission) => void;
 }
 
 const QuestModal = ({
@@ -25,6 +26,7 @@ const QuestModal = ({
   onClose,
   quest,
   onRewardClick,
+  onMissionClick,
 }: QuestModalProps) => {
   if (!isOpen) return null;
 
@@ -154,6 +156,9 @@ const QuestModal = ({
                     <div
                       key={missionItem.mission_id}
                       className="flex items-center gap-3 p-3 border rounded-lg"
+                      onClick={() => {
+                        onMissionClick(missionItem);
+                      }}
                     >
                       {/* 미션 정보 */}
                       <div className="flex-1">

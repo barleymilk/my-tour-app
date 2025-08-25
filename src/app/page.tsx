@@ -9,12 +9,15 @@ import { useState } from "react";
 import Image from "next/image";
 import QuestModal from "@/components/QuestModal";
 import RewardModal from "@/components/RewardModal";
-import { Quest, quests, inProgressQuests, badges } from "@/data";
+import MissionModal from "@/components/MissionModal";
+import { Quest, Mission, quests, inProgressQuests, badges } from "@/data";
 
 export default function Home() {
   const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
+  const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [isQuestModalOpen, setIsQuestModalOpen] = useState(false);
   const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
+  const [isMissionModalOpen, setIsMissionModalOpen] = useState(false);
 
   const handleQuestClick = (quest: Quest | null) => {
     if (quest) {
@@ -83,7 +86,13 @@ export default function Home() {
           <ScrollArea className="w-full max-w-2xl">
             <div className="flex w-max space-x-4">
               {quests.map((quest) => (
-                <Card key={quest.quest_id} className="w-56 h-56 relative">
+                <Card
+                  key={quest.quest_id}
+                  className="w-56 h-56 relative"
+                  onClick={() => {
+                    handleQuestClick(quest);
+                  }}
+                >
                   <CardHeader>
                     <CardTitle className="text-center">{quest.title}</CardTitle>
                   </CardHeader>
@@ -133,7 +142,20 @@ export default function Home() {
           isOpen={isQuestModalOpen}
           onClose={() => setIsQuestModalOpen(false)}
           quest={selectedQuest}
-          onRewardClick={() => setIsRewardModalOpen(true)}
+          onRewardClick={() => {
+            setIsRewardModalOpen(true);
+            // QuestModal은 열린 상태로 유지
+          }}
+          onMissionClick={(mission) => {
+            setSelectedMission(mission);
+            setIsMissionModalOpen(true);
+          }}
+        />
+
+        <MissionModal
+          isOpen={isMissionModalOpen}
+          onClose={() => setIsMissionModalOpen(false)}
+          mission={selectedMission}
         />
 
         <RewardModal
