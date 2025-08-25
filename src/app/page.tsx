@@ -17,7 +17,7 @@ import {
 import "tw-animate-css";
 import TrophyLottie from "@/components/lottie/trophy";
 import NaverMap from "@/components/NaverMap";
-import { Quest, quests, inProgressQuests } from "@/data";
+import { Quest, quests, inProgressQuests, badges } from "@/data";
 
 const QuestModal = ({
   isOpen,
@@ -278,7 +278,7 @@ export default function Home() {
           <Button className="h-12">Search</Button>
         </div>
 
-        <div className="mt-6 mb-16 rounded-lg">
+        <div className="mt-6 mb-12 rounded-lg">
           <h2 className="text-xl font-bold text-center mb-4">
             진행 중인 퀘스트
           </h2>
@@ -324,7 +324,7 @@ export default function Home() {
           </div>
         </div>
 
-        <div className="mt-6 mb-16 rounded-lg">
+        <div className="mt-6 mb-12 rounded-lg">
           <h2 className="text-xl font-bold text-center mb-4">추천 퀘스트</h2>
           <ScrollArea className="w-full max-w-2xl">
             <div className="flex w-max space-x-4">
@@ -350,10 +350,27 @@ export default function Home() {
           </ScrollArea>
         </div>
 
-        <div className="mt-6 mb-6 bg-blue-500 rounded-lg">
+        <Card className="mt-6 mb-6 p-4">
           <h2 className="text-xl font-bold text-center mb-4">배지 현황</h2>
-          <div>badge</div>
-        </div>
+          <ScrollArea className="w-full">
+            <div className="flex gap-2 w-max">
+              {badges.map((badge) => (
+                <div
+                  key={badge.badge_id}
+                  className="rounded-full border-4 border-blue-500 w-20 h-20 p-2 bg-white"
+                >
+                  <Image
+                    src={badge.image_url}
+                    alt={badge.title}
+                    width={100}
+                    height={100}
+                  />
+                </div>
+              ))}
+            </div>
+            <ScrollBar orientation="horizontal" />
+          </ScrollArea>
+        </Card>
 
         <QuestModal
           isOpen={isQuestModalOpen}

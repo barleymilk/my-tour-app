@@ -33,3 +33,10 @@ export type InProgressQuest = {
   completed_missions: string[];
   current_mission: string;
 };
+
+export type Badge = {
+  badge_id: string;
+  title: string;
+  description: string;
+  image_url: string;
+};
