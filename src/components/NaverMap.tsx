@@ -129,10 +129,79 @@ const NaverMap = ({
       },
     });
 
+    // 마커들의 경계(bounds) 계산
+    let mapCenter = new window.naver.maps.LatLng(center.lat, center.lng);
+    let calculatedZoom = zoom;
+
+    if (markers.length > 0) {
+      // 마커들의 최소/최대 위도, 경도 계산
+      const lats = markers.map((m) => m.position.lat);
+      const lngs = markers.map((m) => m.position.lng);
+
+      const minLat = Math.min(...lats);
+      const maxLat = Math.max(...lats);
+      const minLng = Math.min(...lngs);
+      const maxLng = Math.max(...lngs);
+
+      // 경계의 중앙점 계산
+      const centerLat = (minLat + maxLat) / 2;
+      const centerLng = (minLng + maxLng) / 2;
+      mapCenter = new window.naver.maps.LatLng(centerLat, centerLng);
+
+      // 경계의 크기에 따른 적절한 zoom 레벨 계산
+      const latDiff = maxLat - minLat;
+      const lngDiff = maxLng - minLng;
+      const maxDiff = Math.max(latDiff, lngDiff);
+
+      // 경계 크기에 따른 zoom 레벨 매핑 (더 정교한 계산)
+      if (maxDiff > 20) calculatedZoom = 4; // 국가 레벨
+      else if (maxDiff > 10) calculatedZoom = 5; // 광역시/도 레벨
+      else if (maxDiff > 5) calculatedZoom = 7; // 시/군/구 레벨
+      else if (maxDiff > 2) calculatedZoom = 9; // 동/읍/면 레벨
+      else if (maxDiff > 1) calculatedZoom = 11; // 상세 지역 레벨
+      else if (maxDiff > 0.5) calculatedZoom = 13; // 도시 상세 레벨
+      else if (maxDiff > 0.1) calculatedZoom = 15; // 거리 레벨
+      else calculatedZoom = 17; // 건물 레벨
+
+      console.log("마커 경계 계산:", {
+        bounds: { minLat, maxLat, minLng, maxLng },
+        center: { centerLat, centerLng },
+        maxDiff,
+        calculatedZoom,
+      });
+
+      // 마커들이 모두 보이도록 경계 설정
+      const bounds = new window.naver.maps.LatLngBounds();
+      markers.forEach((markerData) => {
+        bounds.extend(
+          new window.naver.maps.LatLng(
+            markerData.position.lat,
+            markerData.position.lng
+          )
+        );
+      });
+
+      // 경계에 여백 추가 (20% 여백)
+      const latPadding = latDiff * 0.2;
+      const lngPadding = lngDiff * 0.2;
+
+      bounds.extend(
+        new window.naver.maps.LatLng(minLat - latPadding, minLng - lngPadding)
+      );
+      bounds.extend(
+        new window.naver.maps.LatLng(maxLat + latPadding, maxLng + lngPadding)
+      );
+
+      console.log("경계 설정 준비 완료:", {
+        bounds: bounds.toString(),
+        padding: { latPadding, lngPadding },
+      });
+    }
+
     // 지도 생성
     const map = new window.naver.maps.Map(mapRef.current, {
-      center: new window.naver.maps.LatLng(center.lat, center.lng),
-      zoom: zoom,
+      center: mapCenter,
+      zoom: calculatedZoom,
       mapTypeControl: false,
       zoomControl: true,
       zoomControlOptions: {
@@ -143,6 +212,60 @@ const NaverMap = ({
 
     mapInstanceRef.current = map;
     console.log("지도 인스턴스 생성 완료:", map);
+
+    // 마커들이 모두 보이도록 경계 적용
+    if (markers.length > 0 && window.naver.maps.LatLngBounds) {
+      try {
+        // 지도가 완전히 로드된 후 경계 적용
+        setTimeout(() => {
+          if (map && mapRef.current) {
+            const bounds = new window.naver.maps.LatLngBounds();
+            markers.forEach((markerData) => {
+              bounds.extend(
+                new window.naver.maps.LatLng(
+                  markerData.position.lat,
+                  markerData.position.lng
+                )
+              );
+            });
+
+            // 경계에 여백 추가 (20% 여백)
+            const lats = markers.map((m) => m.position.lat);
+            const lngs = markers.map((m) => m.position.lng);
+            const minLat = Math.min(...lats);
+            const maxLat = Math.max(...lats);
+            const minLng = Math.min(...lngs);
+            const maxLng = Math.max(...lngs);
+
+            const latPadding = (maxLat - minLat) * 0.2;
+            const lngPadding = (maxLng - minLng) * 0.2;
+
+            bounds.extend(
+              new window.naver.maps.LatLng(
+                minLat - latPadding,
+                minLng - lngPadding
+              )
+            );
+            bounds.extend(
+              new window.naver.maps.LatLng(
+                maxLat + latPadding,
+                maxLng + lngPadding
+              )
+            );
+
+            // 지도 뷰를 경계에 맞춤
+            map.fitBounds(bounds);
+
+            console.log("지도 경계 적용 완료:", {
+              bounds: bounds.toString(),
+              padding: { latPadding, lngPadding },
+            });
+          }
+        }, 500); // 지도 로드 후 0.5초 뒤에 경계 적용
+      } catch (error) {
+        console.error("경계 적용 실패:", error);
+      }
+    }
 
     // 지도가 실제로 렌더링되었는지 확인
     setTimeout(() => {
@@ -164,6 +287,8 @@ const NaverMap = ({
     // });
 
     // 사용자 정의 마커 추가
+    const markerInstances: any[] = [];
+
     markers.forEach((markerData, index) => {
       // order 정보를 포함한 커스텀 마커 HTML 생성
       const markerHtml = [
@@ -190,6 +315,8 @@ const NaverMap = ({
         },
       });
 
+      markerInstances.push(marker);
+
       // 마커 클릭 이벤트
       if (markerData.title) {
         const infoWindow = new window.naver.maps.InfoWindow({
@@ -205,6 +332,41 @@ const NaverMap = ({
         });
       }
     });
+
+    // 마커들을 순서대로 연결하는 선 그리기
+    if (markerInstances.length > 1) {
+      // order 기준으로 마커들을 정렬
+      const sortedMarkers = [...markerInstances].sort((a, b) => {
+        const aOrder =
+          markers.find(
+            (m) =>
+              m.position.lat === a.getPosition().lat() &&
+              m.position.lng === a.getPosition().lng()
+          )?.order || 0;
+        const bOrder =
+          markers.find(
+            (m) =>
+              m.position.lat === b.getPosition().lat() &&
+              m.position.lng === b.getPosition().lng()
+          )?.order || 0;
+        return aOrder - bOrder;
+      });
+
+      // 연속된 마커들 사이에 선 그리기
+      for (let i = 0; i < sortedMarkers.length - 1; i++) {
+        const currentMarker = sortedMarkers[i];
+        const nextMarker = sortedMarkers[i + 1];
+
+        const polyline = new window.naver.maps.Polyline({
+          path: [currentMarker.getPosition(), nextMarker.getPosition()],
+          strokeColor: "#3B82F6", // 파란색
+          strokeWeight: 3,
+          strokeOpacity: 0.8,
+          strokeStyle: "solid",
+          map: map,
+        });
+      }
+    }
 
     // 지도 로드 완료 이벤트
     window.naver.maps.Event.once(map, "init", () => {
