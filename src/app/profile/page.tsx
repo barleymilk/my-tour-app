@@ -1,28 +1,77 @@
 "use client";
 
+import { useEffect, useState } from "react";
 import Header from "@/components/Header";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Trophy, Star, MapPin, Users, Settings, LogOut } from "lucide-react";
+import {
+  Trophy,
+  Star,
+  MapPin,
+  Users,
+  Settings,
+  LogOut,
+  User,
+} from "lucide-react";
 import Navigation from "@/components/Navigation";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
 
 export default function ProfilePage() {
-  const userProfile = {
-    username: "여행자123",
-    level: 15,
-    experience: 1250,
-    nextLevelExp: 1500,
-    avatar: "/api/placeholder/100/100",
-    totalQuests: 42,
-    completedQuests: 38,
-    totalPlaces: 28,
-    visitedPlaces: 25,
-    friends: 12,
-    badges: 8,
+  const { user, logout } = useAuth();
+  const router = useRouter();
+  const [userProfile, setUserProfile] = useState({
+    username: "",
+    level: 1,
+    experience: 0,
+    nextLevelExp: 100,
+    avatar: "",
+    totalQuests: 0,
+    completedQuests: 0,
+    totalPlaces: 0,
+    visitedPlaces: 0,
+    friends: 0,
+    badges: 0,
+  });
+
+  // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+  useEffect(() => {
+    if (!user) {
+      router.push("/auth");
+      return;
+    }
+
+    // 유저 정보로 프로필 초기화
+    setUserProfile((prev) => ({
+      ...prev,
+      username: user.name || user.email?.split("@")[0] || "사용자",
+      avatar: user.avatar_url || "",
+    }));
+  }, [user, router]);
+
+  const handleLogout = async () => {
+    try {
+      await logout();
+      router.push("/auth");
+    } catch (error) {
+      console.error("로그아웃 실패:", error);
+    }
   };
+
+  // 로그인하지 않은 경우 로딩 표시
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p>로딩 중...</p>
+        </div>
+      </div>
+    );
+  }
 
   const badges = [
     {
@@ -32,7 +81,7 @@ export default function ProfilePage() {
       description: "첫 번째 퀘스트 완료",
     },
     { id: 2, name: "탐험가", icon: "🗺️", description: "10개 장소 방문" },
-    { id: 3, name: "친구 사랑", icon: "👥", description: "5명의 친구 추가" },
+    { id: 3, name: "친구 사랑", icon: "��", description: "5명의 친구 추가" },
     {
       id: 4,
       name: "퀘스트 마스터",
@@ -67,6 +116,7 @@ export default function ProfilePage() {
               </Avatar>
               <div className="flex-1">
                 <h1 className="text-2xl font-bold">{userProfile.username}</h1>
+                <p className="text-sm text-gray-600 mb-2">{user.email}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="default">레벨 {userProfile.level}</Badge>
                   <span className="text-sm text-gray-600">
@@ -176,6 +226,7 @@ export default function ProfilePage() {
           </Button>
           <Button
             variant="outline"
+            onClick={handleLogout}
             className="w-full justify-start text-red-600"
           >
             <LogOut className="w-4 h-4 mr-2" />
