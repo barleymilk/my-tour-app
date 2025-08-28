@@ -12,17 +12,6 @@ export type Quest = {
   missions: Mission[];
 };
 
-// 미션 타입 정의
-export type MissionType =
-  | "GPS_AND_PHOTO" // GPS + 사진 촬영
-  | "GPS_AND_AUDIO" // GPS + 음성 녹음
-  | "GPS_AND_TEXT" // GPS + 텍스트 입력
-  | "GPS_AND_PURCHASE" // GPS + 구매 인증
-  | "GPS_AND_QUIZ" // GPS + 퀴즈 풀기
-  | "GPS_AND_TIME" // GPS + 시간 체류
-  | "GPS_AND_ACTION" // GPS + 특정 행동
-  | "GPS_AND_MULTIPLE"; // GPS + 복합 조건
-
 // 입력 타입 정의
 export type InputType =
   | "text" // 텍스트 입력
@@ -142,7 +131,7 @@ export type Mission = {
   place_id: string;
   place_name: string;
   coordinates: { lat: number; lng: number };
-  type: MissionType;
+  type: string;
   condition: string; // 사용자에게 보여줄 조건 설명
   order: number;
   reward_badge_id: string;

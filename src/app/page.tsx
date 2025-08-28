@@ -1,24 +1,118 @@
 "use client";
 
 import Header from "@/components/Header";
-import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
-import { useState } from "react";
-import Image from "next/image";
+import { useEffect, useState } from "react";
 import QuestModal from "@/components/QuestModal";
 import RewardModal from "@/components/RewardModal";
 import MissionModal from "@/components/MissionModal";
-import { Quest, Mission, quests, inProgressQuests, badges } from "@/data";
+import { Quest, Mission, quests, inProgressQuests } from "@/data";
 import Navigation from "@/components/Navigation";
+import { getPhotoPath } from "@/hooks/useSupabase";
+import { User } from "./profile/page";
+import { UserBadge } from "./profile/page";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { useRouter } from "next/navigation";
+import { Star } from "lucide-react";
 
 export default function Home() {
+  const { user, logout } = useAuth();
+  const router = useRouter();
   const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [isQuestModalOpen, setIsQuestModalOpen] = useState(false);
   const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
   const [isMissionModalOpen, setIsMissionModalOpen] = useState(false);
+  const [userProfile, setUserProfile] = useState<User>({
+    id: "",
+    nickname: "",
+    level: 1,
+    exp: 0,
+    age: 0,
+    gender: "",
+    is_single: false,
+    has_child: false,
+    tags: [],
+    completed_quests_cnt: 0,
+    visited_attractions_cnt: 0,
+    friends_cnt: 0,
+    badges_cnt: 0,
+  });
+  const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
+
+  useEffect(() => {
+    // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
+    if (!user) {
+      router.push("/auth");
+      return;
+    }
+
+    const fetchUsers = async () => {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+      if (error) {
+        console.error("유저 정보 조회 실패:", error);
+      } else {
+        setUserProfile(data as unknown as User);
+      }
+    };
+
+    const fetchBadges = async () => {
+      const { data: userBadges, error: userBadgesError } = await supabase
+        .from("user_badges")
+        .select(
+          `
+            id,
+            badge_id,
+            created_at,
+            badges:badges(
+              id,
+              title,
+              description,
+              image_url
+            )
+          `
+        )
+        .eq("user_id", user.id);
+
+      // console.log("🎯 배지 조회 결과:", userBadges);
+      // console.log("🎯 배지 조회 에러:", userBadgesError);
+
+      if (userBadgesError) {
+        console.error("사용자 뱃지 조회 실패:", userBadgesError);
+        return;
+      }
+      // 각 배지의 이미지 URL을 public URL로 변환
+      const badgesWithPublicUrls = await Promise.all(
+        userBadges.map(async (badge) => {
+          if (badge.badges.image_url) {
+            const publicUrl = await getPhotoPath(
+              badge.badges.image_url,
+              "badges"
+            );
+            return {
+              ...badge,
+              badges: {
+                ...badge.badges,
+                image_url: publicUrl,
+              },
+            };
+          }
+          return badge;
+        })
+      );
+      setUserBadges(badgesWithPublicUrls as unknown as UserBadge[]);
+    };
+
+    fetchUsers();
+    fetchBadges();
+  }, []);
 
   const handleQuestClick = (quest: Quest | null) => {
     if (quest) {
@@ -119,26 +213,47 @@ export default function Home() {
             🏆 배지 현황
           </h2>
           <ScrollArea className="w-full">
-            <div className="flex w-max space-x-4">
-              {badges.map((badge) => (
-                <div
-                  key={badge.badge_id}
-                  className="text-center p-3 border rounded-lg"
-                >
-                  <div className="text-3xl mb-2 w-18 h-18 flex items-center justify-center">
-                    <Image
-                      src={badge.image_url}
-                      alt={badge.title}
-                      width={64}
-                      height={64}
-                      className="w-full h-full object-contain"
-                    />
-                  </div>
-                  <p className="font-semibold text-sm">{badge.title}</p>
-                  <p className="text-xs text-gray-600">{badge.description}</p>
-                </div>
-              ))}
-            </div>
+            {userBadges.length > 0 ? (
+              <div className="flex w-max space-x-4">
+                {userBadges.map((userBadge) => {
+                  const badge = userBadge.badges;
+
+                  if (!badge) return null;
+
+                  return (
+                    <div
+                      key={userBadge.id}
+                      className="text-center p-3 border rounded-lg w-30"
+                    >
+                      <div className="text-3xl mb-2">
+                        {badge.image_url ? (
+                          <img
+                            src={badge.image_url}
+                            alt={badge.title}
+                            className="w-12 h-12 mx-auto object-cover rounded-full"
+                          />
+                        ) : (
+                          "🏆"
+                        )}
+                      </div>
+                      <p className="font-semibold text-sm truncate">
+                        {badge.title}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Star className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                <p className="text-lg font-medium">
+                  아직 획득한 배지가 없습니다
+                </p>
+                <p className="text-sm">
+                  퀘스트를 완료하고 배지를 획득해보세요!
+                </p>
+              </div>
+            )}
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
         </div>

@@ -7,50 +7,133 @@ import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import {
-  Trophy,
-  Star,
-  MapPin,
-  Users,
-  Settings,
-  LogOut,
-  User,
-} from "lucide-react";
+import { Trophy, Star, MapPin, Users, Settings, LogOut } from "lucide-react";
 import Navigation from "@/components/Navigation";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
+import { supabase } from "@/lib/supabase";
+import { getPhotoPath } from "@/hooks/useSupabase";
+
+export interface User {
+  id: string;
+  nickname: string;
+  level: number;
+  exp: number;
+  age?: number;
+  gender?: string;
+  is_single: boolean;
+  has_child: boolean;
+  tags: string[];
+  completed_quests_cnt: number;
+  visited_attractions_cnt: number;
+  friends_cnt: number;
+  badges_cnt: number;
+}
+
+export interface UserBadge {
+  id: string;
+  badge_id: string;
+  created_at: string;
+  badges: {
+    id: string;
+    title: string;
+    description: string;
+    image_url: string;
+  }[];
+}
 
 export default function ProfilePage() {
   const { user, logout } = useAuth();
   const router = useRouter();
-  const [userProfile, setUserProfile] = useState({
-    username: "",
+  const [userProfile, setUserProfile] = useState<User>({
+    id: "",
+    nickname: "",
     level: 1,
-    experience: 0,
-    nextLevelExp: 100,
-    avatar: "",
-    totalQuests: 0,
-    completedQuests: 0,
-    totalPlaces: 0,
-    visitedPlaces: 0,
-    friends: 0,
-    badges: 0,
+    exp: 0,
+    age: 0,
+    gender: "",
+    is_single: false,
+    has_child: false,
+    tags: [],
+    completed_quests_cnt: 0,
+    visited_attractions_cnt: 0,
+    friends_cnt: 0,
+    badges_cnt: 0,
   });
+  const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
 
-  // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
   useEffect(() => {
+    // 로그인하지 않은 경우 로그인 페이지로 리다이렉트
     if (!user) {
       router.push("/auth");
       return;
     }
 
-    // 유저 정보로 프로필 초기화
-    setUserProfile((prev) => ({
-      ...prev,
-      username: user.name || user.email?.split("@")[0] || "사용자",
-      avatar: user.avatar_url || "",
-    }));
-  }, [user, router]);
+    const fetchUsers = async () => {
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("user_id", user.id)
+        .single();
+      if (error) {
+        console.error("유저 정보 조회 실패:", error);
+      } else {
+        setUserProfile(data as unknown as User);
+      }
+    };
+
+    const fetchBadges = async () => {
+      const { data: userBadges, error: userBadgesError } = await supabase
+        .from("user_badges")
+        .select(
+          `
+            id,
+            badge_id,
+            created_at,
+            badges:badges(
+              id,
+              title,
+              description,
+              image_url
+            )
+          `
+        )
+        .eq("user_id", user.id);
+
+      // console.log("🎯 배지 조회 결과:", userBadges);
+      // console.log("🎯 배지 조회 에러:", userBadgesError);
+
+      if (userBadgesError) {
+        console.error("사용자 뱃지 조회 실패:", userBadgesError);
+        return;
+      }
+      // 각 배지의 이미지 URL을 public URL로 변환
+      const badgesWithPublicUrls = await Promise.all(
+        userBadges.map(async (badge) => {
+          if (badge.badges.image_url) {
+            const publicUrl = await getPhotoPath(
+              badge.badges.image_url,
+              "badges"
+            );
+            return {
+              ...badge,
+              badges: {
+                ...badge.badges,
+                image_url: publicUrl,
+              },
+            };
+          }
+          return badge;
+        })
+      );
+      setUserBadges(badgesWithPublicUrls as unknown as UserBadge[]);
+    };
+
+    fetchUsers();
+    fetchBadges();
+  }, []);
+  // console.log("data", userProfile);
+  // console.log("badges", userBadges);
 
   const handleLogout = async () => {
     try {
@@ -73,23 +156,6 @@ export default function ProfilePage() {
     );
   }
 
-  const badges = [
-    {
-      id: 1,
-      name: "첫 퀘스트",
-      icon: "🎯",
-      description: "첫 번째 퀘스트 완료",
-    },
-    { id: 2, name: "탐험가", icon: "🗺️", description: "10개 장소 방문" },
-    { id: 3, name: "친구 사랑", icon: "��", description: "5명의 친구 추가" },
-    {
-      id: 4,
-      name: "퀘스트 마스터",
-      icon: "🏆",
-      description: "20개 퀘스트 완료",
-    },
-  ];
-
   const recentActivities = [
     { id: 1, type: "quest", text: "남산타워 퀘스트 완료", time: "2시간 전" },
     { id: 2, type: "place", text: "경복궁 방문", time: "1일 전" },
@@ -97,8 +163,7 @@ export default function ProfilePage() {
     { id: 4, type: "badge", text: "탐험가 배지 획득", time: "3일 전" },
   ];
 
-  const experienceProgress =
-    (userProfile.experience / userProfile.nextLevelExp) * 100;
+  const experienceProgress = (userProfile.exp / 100) * 100;
 
   return (
     <>
@@ -109,18 +174,18 @@ export default function ProfilePage() {
           <CardContent className="p-6">
             <div className="flex items-center gap-4">
               <Avatar className="h-20 w-20">
-                <AvatarImage src={userProfile.avatar} />
+                <AvatarImage src={userProfile.avatar_url} />
                 <AvatarFallback className="text-2xl">
-                  {userProfile.username.charAt(0)}
+                  {userProfile.nickname.charAt(0)}
                 </AvatarFallback>
               </Avatar>
               <div className="flex-1">
-                <h1 className="text-2xl font-bold">{userProfile.username}</h1>
+                <h1 className="text-2xl font-bold">{userProfile.nickname}</h1>
                 <p className="text-sm text-gray-600 mb-2">{user.email}</p>
                 <div className="flex items-center gap-2 mt-1">
                   <Badge variant="default">레벨 {userProfile.level}</Badge>
                   <span className="text-sm text-gray-600">
-                    {userProfile.experience} / {userProfile.nextLevelExp} EXP
+                    {userProfile.exp} / 100 EXP
                   </span>
                 </div>
                 <Progress value={experienceProgress} className="mt-2 h-2" />
@@ -137,7 +202,7 @@ export default function ProfilePage() {
                 <Trophy className="w-6 h-6 text-yellow-500" />
               </div>
               <p className="text-2xl font-bold">
-                {userProfile.completedQuests}
+                {userProfile.completed_quests_cnt}{" "}
               </p>
               <p className="text-sm text-gray-600">완료된 퀘스트</p>
             </CardContent>
@@ -147,7 +212,9 @@ export default function ProfilePage() {
               <div className="flex items-center justify-center mb-2">
                 <MapPin className="w-6 h-6 text-blue-500" />
               </div>
-              <p className="text-2xl font-bold">{userProfile.visitedPlaces}</p>
+              <p className="text-2xl font-bold">
+                {userProfile.visited_attractions_cnt}
+              </p>
               <p className="text-sm text-gray-600">방문한 장소</p>
             </CardContent>
           </Card>
@@ -156,7 +223,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-center mb-2">
                 <Users className="w-6 h-6 text-green-500" />
               </div>
-              <p className="text-2xl font-bold">{userProfile.friends}</p>
+              <p className="text-2xl font-bold">{userProfile.friends_cnt}</p>
               <p className="text-sm text-gray-600">친구</p>
             </CardContent>
           </Card>
@@ -165,7 +232,7 @@ export default function ProfilePage() {
               <div className="flex items-center justify-center mb-2">
                 <Star className="w-6 h-6 text-purple-500" />
               </div>
-              <p className="text-2xl font-bold">{userProfile.badges}</p>
+              <p className="text-2xl font-bold">{userProfile.badges_cnt}</p>
               <p className="text-sm text-gray-600">배지</p>
             </CardContent>
           </Card>
@@ -176,22 +243,55 @@ export default function ProfilePage() {
           <CardHeader>
             <CardTitle className="flex items-center gap-2">
               <Star className="w-5 h-5 text-yellow-500" />
-              획득한 배지
+              획득한 배지 ({userBadges.length})
             </CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="grid grid-cols-2 gap-4">
-              {badges.map((badge) => (
-                <div
-                  key={badge.id}
-                  className="text-center p-3 border rounded-lg"
-                >
-                  <div className="text-3xl mb-2">{badge.icon}</div>
-                  <p className="font-semibold text-sm">{badge.name}</p>
-                  <p className="text-xs text-gray-600">{badge.description}</p>
-                </div>
-              ))}
-            </div>
+            {userBadges.length > 0 ? (
+              <div className="grid grid-cols-2 gap-4">
+                {userBadges.map((userBadge) => {
+                  const badge = userBadge.badges;
+
+                  if (!badge) return null;
+
+                  return (
+                    <div
+                      key={userBadge.id}
+                      className="text-center p-3 border rounded-lg"
+                    >
+                      <div className="text-3xl mb-2">
+                        {badge.image_url ? (
+                          <img
+                            src={badge.image_url}
+                            alt={badge.title}
+                            className="w-12 h-12 mx-auto object-cover rounded-full"
+                          />
+                        ) : (
+                          "🏆"
+                        )}
+                      </div>
+                      <p className="font-semibold text-sm">{badge.title}</p>
+                      <p className="text-xs text-gray-600">
+                        {badge.description}
+                      </p>
+                      <p className="text-xs text-gray-400 mt-1">
+                        {new Date(userBadge.created_at).toLocaleDateString()}
+                      </p>
+                    </div>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-gray-500">
+                <Star className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+                <p className="text-lg font-medium">
+                  아직 획득한 배지가 없습니다
+                </p>
+                <p className="text-sm">
+                  퀘스트를 완료하고 배지를 획득해보세요!
+                </p>
+              </div>
+            )}
           </CardContent>
         </Card>
 

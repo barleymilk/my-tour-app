@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mission, InputType, InputCondition } from "@/data";
+import { Mission, InputCondition } from "@/data";
 import dynamic from "next/dynamic";
 
 // Lottie 컴포넌트를 동적으로 import
@@ -44,6 +44,8 @@ const MissionModal = ({
   const [inputs, setInputs] = useState<Record<string, unknown>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showTrophy, setShowTrophy] = useState(false);
+
+  console.log("@@@mission", mission);
 
   if (!isOpen || !mission) return null;
 
@@ -106,91 +108,62 @@ const MissionModal = ({
     );
   }
 
-  const renderInputField = (input: InputCondition, index: number) => {
+  const renderInputField = (missionType: string, index: number) => {
     const inputKey = `input_${index}`;
 
-    switch (input.type) {
+    console.log(`renderInputField 호출됨:`, {
+      index,
+      inputKey,
+      missionType,
+    });
+
+    switch (missionType) {
       case "text":
+        console.log("텍스트 입력 필드 렌더링");
         return (
           <div key={inputKey} className="space-y-2">
             <Label htmlFor={inputKey}>
-              텍스트 입력{" "}
-              {input.required && <span className="text-red-500">*</span>}
+              텍스트 입력 <span className="text-red-500">*</span>
             </Label>
             <Textarea
               id={inputKey}
-              placeholder={input.hint || "텍스트를 입력해주세요"}
+              placeholder="미션 완료에 대한 텍스트를 입력해주세요"
               value={(inputs[inputKey] as string) || ""}
               onChange={(e) => handleInputChange(inputKey, e.target.value)}
-              minLength={input.min_length}
-              maxLength={input.max_length}
               className="min-h-[100px]"
+              required
             />
-            {input.hint && (
-              <p className="text-sm text-gray-600">{input.hint}</p>
-            )}
-            {input.min_length && input.max_length && (
-              <p className="text-xs text-gray-500">
-                {(inputs[inputKey] as string)?.length || 0} / {input.max_length}{" "}
-                글자
-              </p>
-            )}
-          </div>
-        );
-
-      case "number":
-        return (
-          <div key={inputKey} className="space-y-2">
-            <Label htmlFor={inputKey}>
-              숫자 입력{" "}
-              {input.required && <span className="text-red-500">*</span>}
-            </Label>
-            <Input
-              id={inputKey}
-              type="number"
-              placeholder={input.hint || "숫자를 입력해주세요"}
-              value={(inputs[inputKey] as number) || ""}
-              onChange={(e) =>
-                handleInputChange(inputKey, Number(e.target.value))
-              }
-              min={input.min_value}
-              max={input.max_value}
-            />
-            {input.hint && (
-              <p className="text-sm text-gray-600">{input.hint}</p>
-            )}
+            <p className="text-sm text-gray-600">
+              미션을 완료한 후의 느낌이나 경험을 자유롭게 작성해주세요
+            </p>
           </div>
         );
 
       case "photo":
+        console.log("사진 입력 필드 렌더링");
         return (
           <div key={inputKey} className="space-y-2">
             <Label htmlFor={inputKey}>
-              사진 촬영{" "}
-              {input.required && <span className="text-red-500">*</span>}
+              사진 촬영 <span className="text-red-500">*</span>
             </Label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
               <input
                 id={inputKey}
                 type="file"
-                accept={input.file_types?.join(",") || "image/*"}
+                accept="image/*"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    // 파일 크기 체크 (MB)
-                    if (
-                      input.max_file_size &&
-                      file.size > input.max_file_size * 1024 * 1024
-                    ) {
-                      alert(
-                        `파일 크기는 ${input.max_file_size}MB 이하여야 합니다.`
-                      );
+                    // 파일 크기 체크 (10MB)
+                    if (file.size > 10 * 1024 * 1024) {
+                      alert("파일 크기는 10MB 이하여야 합니다.");
                       return;
                     }
                     handleInputChange(inputKey, file);
                   }
                 }}
                 className="hidden"
+                required
               />
               <label htmlFor={inputKey} className="cursor-pointer">
                 <div className="text-gray-600">
@@ -205,54 +178,48 @@ const MissionModal = ({
                     </div>
                   ) : (
                     <div>
-                      <p className="text-lg">사진을 촬영하거나 선택하세요</p>
+                      <p className="text-lg">📸 사진을 촬영하거나 선택하세요</p>
                       <p className="text-sm text-gray-500">
-                        {input.file_types?.join(", ") || "이미지 파일"}
+                        미션과 관련된 사진을 업로드해주세요
                       </p>
-                      {input.max_file_size && (
-                        <p className="text-xs text-gray-400">
-                          최대 {input.max_file_size}MB
-                        </p>
-                      )}
+                      <p className="text-xs text-gray-400">
+                        최대 10MB (JPG, PNG, GIF 등)
+                      </p>
                     </div>
                   )}
                 </div>
               </label>
             </div>
-            {input.hint && (
-              <p className="text-sm text-gray-600">{input.hint}</p>
-            )}
+            <p className="text-sm text-gray-600">
+              미션 완료를 증명할 수 있는 사진을 업로드해주세요
+            </p>
           </div>
         );
 
       case "audio":
+        console.log("음성 입력 필드 렌더링");
         return (
           <div key={inputKey} className="space-y-2">
             <Label htmlFor={inputKey}>
-              음성 녹음{" "}
-              {input.required && <span className="text-red-500">*</span>}
+              음성 녹음 <span className="text-red-500">*</span>
             </Label>
             <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
               <input
                 id={inputKey}
                 type="file"
-                accept={input.file_types?.join(",") || "audio/*"}
+                accept="audio/*"
                 onChange={(e) => {
                   const file = e.target.files?.[0];
                   if (file) {
-                    if (
-                      input.max_file_size &&
-                      file.size > input.max_file_size * 1024 * 1024
-                    ) {
-                      alert(
-                        `파일 크기는 ${input.max_file_size}MB 이하여야 합니다.`
-                      );
+                    if (file.size > 10 * 1024 * 1024) {
+                      alert("파일 크기는 10MB 이하여야 합니다.");
                       return;
                     }
                     handleInputChange(inputKey, file);
                   }
                 }}
                 className="hidden"
+                required
               />
               <label htmlFor={inputKey} className="cursor-pointer">
                 <div className="text-gray-600">
@@ -267,160 +234,169 @@ const MissionModal = ({
                     </div>
                   ) : (
                     <div>
-                      <p className="text-lg">�� 음성을 녹음하거나 선택하세요</p>
+                      <p className="text-lg">🎤 음성을 녹음하거나 선택하세요</p>
                       <p className="text-sm text-gray-500">
-                        {input.file_types?.join(", ") || "오디오 파일"}
+                        미션과 관련된 음성을 업로드해주세요
                       </p>
-                      {input.max_file_size && (
-                        <p className="text-xs text-gray-400">
-                          최대 {input.max_file_size}MB
-                        </p>
-                      )}
-                      {input.min_duration && input.max_duration && (
-                        <p className="text-xs text-gray-400">
-                          {input.min_duration}초 ~ {input.max_duration}초
-                        </p>
-                      )}
+                      <p className="text-xs text-gray-400">
+                        최대 10MB (MP3, WAV, M4A 등)
+                      </p>
                     </div>
                   )}
                 </div>
               </label>
             </div>
-            {input.hint && (
-              <p className="text-sm text-gray-600">{input.hint}</p>
-            )}
+            <p className="text-sm text-gray-600">
+              미션 완료를 증명할 수 있는 음성을 업로드해주세요
+            </p>
           </div>
         );
 
       case "quiz":
-        if (!input.quiz) return null;
-
+        console.log("퀴즈 입력 필드 렌더링");
         return (
           <div key={inputKey} className="space-y-2">
             <Label htmlFor={inputKey}>
-              퀴즈 {input.required && <span className="text-red-500">*</span>}
+              퀴즈 답변 <span className="text-red-500">*</span>
             </Label>
-            <div className="space-y-3">
-              <p className="font-medium">{input.quiz.question}</p>
-
-              {input.quiz.type === "multiple_choice" && input.quiz.options ? (
-                <div className="space-y-2">
-                  {input.quiz.options.map((option, optionIndex) => (
-                    <label
-                      key={optionIndex}
-                      className="flex items-center space-x-2 cursor-pointer"
-                    >
-                      <input
-                        type="radio"
-                        name={inputKey}
-                        value={option}
-                        checked={inputs[inputKey] === option}
-                        onChange={(e) =>
-                          handleInputChange(inputKey, e.target.value)
-                        }
-                        className="text-blue-600"
-                      />
-                      <span>{option}</span>
-                    </label>
-                  ))}
-                </div>
-              ) : (
-                <Input
-                  placeholder={input.quiz.hint || "정답을 입력하세요"}
-                  value={(inputs[inputKey] as string) || ""}
-                  onChange={(e) => handleInputChange(inputKey, e.target.value)}
-                />
-              )}
-
-              {input.quiz.hint && (
-                <p className="text-sm text-gray-600">💡 {input.quiz.hint}</p>
-              )}
-            </div>
+            <Input
+              id={inputKey}
+              placeholder="퀴즈 정답을 입력해주세요"
+              value={(inputs[inputKey] as string) || ""}
+              onChange={(e) => handleInputChange(inputKey, e.target.value)}
+              required
+            />
+            <p className="text-sm text-gray-600">
+              미션과 관련된 퀴즈의 정답을 입력해주세요
+            </p>
           </div>
         );
 
       case "purchase":
+        console.log("구매 입력 필드 렌더링");
         return (
           <div key={inputKey} className="space-y-2">
             <Label htmlFor={inputKey}>
-              구매 인증{" "}
-              {input.required && <span className="text-red-500">*</span>}
+              구매 증명 <span className="text-red-500">*</span>
             </Label>
-            <div className="space-y-3">
-              <Input
-                type="number"
-                placeholder="구매 금액을 입력하세요"
-                value={(inputs[inputKey] as number) || ""}
-                onChange={(e) =>
-                  handleInputChange(inputKey, Number(e.target.value))
-                }
-                min={input.purchase_min_amount}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <input
+                id={inputKey}
+                type="file"
+                accept="image/*,.pdf"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    if (file.size > 10 * 1024 * 1024) {
+                      alert("파일 크기는 10MB 이하여야 합니다.");
+                      return;
+                    }
+                    handleInputChange(inputKey, file);
+                  }
+                }}
+                className="hidden"
+                required
               />
-              {input.purchase_min_amount && (
-                <p className="text-sm text-gray-600">
-                  최소 {input.purchase_min_amount.toLocaleString()}원 이상
-                  구매해야 합니다
-                </p>
-              )}
-              {input.purchase_categories && (
-                <div className="flex flex-wrap gap-2">
-                  {input.quiz?.hint && (
-                    <div className="flex flex-wrap gap-2">
-                      {input.purchase_categories.map((category) => (
-                        <Badge key={category} variant="secondary">
-                          {category}
-                        </Badge>
-                      ))}
+              <label htmlFor={inputKey} className="cursor-pointer">
+                <div className="text-gray-600">
+                  {inputs[inputKey] ? (
+                    <div>
+                      <p className="font-medium text-green-600">
+                        ✓ 구매 증명이 선택되었습니다
+                      </p>
+                      <p className="text-sm">
+                        {(inputs[inputKey] as File).name}
+                      </p>
+                    </div>
+                  ) : (
+                    <div>
+                      <p className="text-lg">🛒 구매 증명을 업로드하세요</p>
+                      <p className="text-sm text-gray-500">
+                        영수증이나 구매 내역을 촬영해주세요
+                      </p>
+                      <p className="text-xs text-gray-400">
+                        최대 10MB (JPG, PNG, PDF 등)
+                      </p>
                     </div>
                   )}
                 </div>
-              )}
+              </label>
             </div>
+            <p className="text-sm text-gray-600">
+              미션과 관련된 구매 증명을 업로드해주세요
+            </p>
           </div>
         );
 
       default:
-        return null;
+        console.log("알 수 없는 미션 타입:", missionType);
+        return (
+          <div key={inputKey} className="space-y-2">
+            <Label htmlFor={inputKey}>
+              미션 완료 확인 <span className="text-red-500">*</span>
+            </Label>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 text-center">
+              <p className="text-blue-800 font-medium">
+                이 미션은 특별한 입력이 필요하지 않습니다
+              </p>
+              <p className="text-blue-600 text-sm mt-1">
+                미션을 완료했다고 생각되시면 "미션 완료" 버튼을 클릭하세요
+              </p>
+            </div>
+          </div>
+        );
     }
   };
 
   const isFormValid = () => {
-    if (!mission.completion.inputs) return true;
-
-    return mission.completion.inputs.every((input, index) => {
-      if (!input.required) return true;
-
-      const inputKey = `input_${index}`;
-      const value = inputs[inputKey];
-
-      if (value === undefined || value === null || value === "") return false;
-
-      // 타입별 유효성 검사
-      switch (input.type) {
-        case "text":
-          const textValue = value as string;
-          if (input.min_length && textValue.length < input.min_length)
-            return false;
-          if (input.max_length && textValue.length > input.max_length)
-            return false;
-          break;
-        case "number":
-          const numValue = value as number;
-          if (input.min_value && numValue < input.min_value) return false;
-          if (input.max_value && numValue > input.max_value) return false;
-          break;
-        case "purchase":
-          const purchaseValue = value as number;
-          if (
-            input.purchase_min_amount &&
-            purchaseValue < input.purchase_min_amount
-          )
-            return false;
-          break;
-      }
-
+    if (!mission?.type) {
+      console.log("미션 타입이 없음 - 폼 유효함");
       return true;
+    }
+
+    console.log("폼 유효성 검사 시작:", mission.type);
+
+    // 특정 타입들은 입력이 필수가 아님
+    if (["purchase", "time", "action", "multiple"].includes(mission.type)) {
+      console.log("이 미션 타입은 입력이 필수가 아님");
+      return true;
+    }
+
+    const inputKey = `input_0`;
+    const value = inputs[inputKey];
+
+    console.log(`입력 필드 검사:`, {
+      inputKey,
+      value,
+      missionType: mission.type,
     });
+
+    if (value === undefined || value === null || value === "") {
+      console.log(`입력 필드: 값이 없음`);
+      return false;
+    }
+
+    // 타입별 유효성 검사
+    switch (mission.type) {
+      case "text":
+        const textValue = value as string;
+        if (textValue.trim().length === 0) {
+          console.log(`텍스트 입력: 빈 문자열`);
+          return false;
+        }
+        break;
+      case "photo":
+      case "audio":
+      case "purchase":
+        if (!(value instanceof File)) {
+          console.log(`파일 입력: 파일이 아님`);
+          return false;
+        }
+        break;
+    }
+
+    console.log(`입력 필드: 유효함`);
+    return true;
   };
 
   return (
@@ -478,13 +454,17 @@ const MissionModal = ({
         </Card>
 
         {/* 미션 완료 입력 폼 */}
-        {mission.completion.inputs && mission.completion.inputs.length > 0 && (
+        {mission?.type ? (
           <div className="space-y-6">
             <h3 className="text-lg font-semibold">✅ 미션 완료하기</h3>
-
-            {mission.completion.inputs.map((input, index) =>
-              renderInputField(input, index)
-            )}
+            {renderInputField(mission.type, 0)}
+          </div>
+        ) : (
+          <div className="text-center py-8 text-gray-500">
+            <p className="text-lg font-medium">입력 필드가 없습니다</p>
+            <p className="text-sm">
+              이 미션은 추가 입력 없이 완료할 수 있습니다
+            </p>
           </div>
         )}
 
