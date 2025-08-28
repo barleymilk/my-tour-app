@@ -13,7 +13,7 @@ export default function ProfileCheck({ children }: ProfileCheckProps) {
   const { user, getUserProfile } = useAuth();
   const router = useRouter();
   const [isChecking, setIsChecking] = useState(true);
-  const [hasProfile, setHasProfile] = useState(false);
+
   const [showProfileSetup, setShowProfileSetup] = useState(false);
 
   useEffect(() => {
@@ -26,7 +26,6 @@ export default function ProfileCheck({ children }: ProfileCheckProps) {
       try {
         const profile = await getUserProfile();
         if (profile) {
-          setHasProfile(true);
         } else {
           setShowProfileSetup(true);
         }

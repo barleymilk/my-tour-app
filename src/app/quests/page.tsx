@@ -1,10 +1,9 @@
 "use client";
 import Header from "@/components/Header";
-import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { inProgressQuests, quests, Mission, Quest } from "@/data";
+import { Mission, Quest } from "@/data";
 import QuestModal from "@/components/QuestModal";
 import MissionModal from "@/components/MissionModal";
 import RewardModal from "@/components/RewardModal";
@@ -12,7 +11,6 @@ import { useEffect, useState } from "react";
 import Navigation from "@/components/Navigation";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
-import { Dialog, DialogContent } from "@/components/ui/dialog";
 
 interface UserQuest {
   id: string;
@@ -91,17 +89,10 @@ export default function QuestsPage() {
   >([]);
 
   // 퀴즈 관련 상태
-  const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
-  const [selectedQuizMission, setSelectedQuizMission] =
-    useState<UserMission | null>(null);
-  const [quizAnswer, setQuizAnswer] = useState("");
-  const [selectedOption, setSelectedOption] = useState("");
-  const [showCorrectAnswer, setShowCorrectAnswer] = useState(false);
-
-  const handleQuestClick = (quest: Quest | null) => {
-    setSelectedQuest(quest);
-    setIsQuestModalOpen(true);
-  };
+  // const [selectedQuizMission, setSelectedQuizMission] =
+  //   useState<UserMission | null>(null);
+  // const [quizAnswer, setQuizAnswer] = useState("");
+  // const [selectedOption, setSelectedOption] = useState("");
 
   // 추천 퀘스트 클릭 처리
   const handleRecommendedQuestClick = (recommendedQuest: RecommendedQuest) => {
@@ -122,53 +113,6 @@ export default function QuestsPage() {
 
     setSelectedQuest(questData);
     setIsQuestModalOpen(true);
-  };
-
-  // 퀴즈 제출 처리
-  const handleQuizSubmit = async () => {
-    if (!selectedQuizMission) return;
-
-    const isCorrect =
-      quizAnswer.toLowerCase().trim() ===
-        selectedQuizMission.missions.quiz?.answer.toLowerCase().trim() ||
-      selectedOption === selectedQuizMission.missions.quiz?.answer;
-
-    if (isCorrect) {
-      // 정답인 경우 미션 상태를 completed로 업데이트
-      const { error } = await supabase
-        .from("user_missions")
-        .update({ status: "completed" })
-        .eq("id", selectedQuizMission.id);
-
-      if (!error) {
-        // 로컬 상태 업데이트
-        setUserMissions((prev) =>
-          prev.map((m) =>
-            m.id === selectedQuizMission.id ? { ...m, status: "completed" } : m
-          )
-        );
-
-        setShowCorrectAnswer(true);
-        setTimeout(() => {
-          setShowCorrectAnswer(false);
-          setIsQuizModalOpen(false);
-          setSelectedQuizMission(null);
-          setQuizAnswer("");
-          setSelectedOption("");
-        }, 2000);
-      }
-    } else {
-      // 오답인 경우 힌트 표시
-      alert(`틀렸습니다. 힌트: ${selectedQuizMission.missions.quiz?.hint}`);
-    }
-  };
-
-  // 퀴즈 모달 열기
-  const openQuizModal = (mission: UserMission) => {
-    setSelectedQuizMission(mission);
-    setIsQuizModalOpen(true);
-    setQuizAnswer("");
-    setSelectedOption("");
   };
 
   useEffect(() => {
@@ -197,10 +141,10 @@ export default function QuestsPage() {
         )
         .eq("user_id", user.id);
 
-      console.log("🔍 user_quests 조회 결과:", {
-        userQuestsData,
-        userQuestsError,
-      });
+      // console.log("🔍 user_quests 조회 결과:", {
+      //   userQuestsData,
+      //   userQuestsError,
+      // });
 
       if (userQuestsError) {
         console.error("사용자 퀘스트 조회 실패:", userQuestsError);
@@ -247,10 +191,10 @@ export default function QuestsPage() {
           )
           .eq("user_id", user.id);
 
-      console.log("🔍 user_missions 조회 결과:", {
-        userMissionsData,
-        userMissionsError,
-      });
+      // console.log("🔍 user_missions 조회 결과:", {
+      //   userMissionsData,
+      //   userMissionsError,
+      // });
 
       if (userMissionsError) {
         console.error("사용자 미션 조회 실패:", userMissionsError);
@@ -258,30 +202,30 @@ export default function QuestsPage() {
 
       // 3. 데이터 구조 분석
       if (userQuestsData) {
-        console.log("📋 사용자 퀘스트 데이터:", userQuestsData);
+        // console.log("📋 사용자 퀘스트 데이터:", userQuestsData);
         setUserQuests(userQuestsData as unknown as UserQuest[]);
-        userQuestsData.forEach((userQuest, index) => {
-          console.log(`🎯 퀘스트 ${index + 1}:`, {
-            id: userQuest.id,
-            quest_id: userQuest.quest_id,
-            status: userQuest.status,
-            progress: userQuest.progress,
-            quest: userQuest.quests,
-          });
-        });
+        // userQuestsData.forEach((userQuest, index) => {
+        // console.log(`🎯 퀘스트 ${index + 1}:`, {
+        //   id: userQuest.id,
+        //   quest_id: userQuest.quest_id,
+        //   status: userQuest.status,
+        //   progress: userQuest.progress,
+        //   quest: userQuest.quests,
+        // });
+        // });
       }
 
       if (userMissionsData) {
-        console.log("📋 사용자 미션 데이터:", userMissionsData);
+        // console.log("📋 사용자 미션 데이터:", userMissionsData);
         setUserMissions(userMissionsData as unknown as UserMission[]);
-        userMissionsData.forEach((userMission, index) => {
-          console.log(`🎯 미션 ${index + 1}:`, {
-            id: userMission.id,
-            mission_id: userMission.mission_id,
-            status: userMission.status,
-            mission: userMission.missions,
-          });
-        });
+        // userMissionsData.forEach((userMission, index) => {
+        //   console.log(`🎯 미션 ${index + 1}:`, {
+        //     id: userMission.id,
+        //     mission_id: userMission.mission_id,
+        //     status: userMission.status,
+        //     mission: userMission.missions,
+        //   });
+        // });
       }
 
       // 4. 추천 퀘스트 조회 (진행 중인 퀘스트 제외)
@@ -300,7 +244,7 @@ export default function QuestsPage() {
           (quest) => !inProgressQuestIds.includes(quest.id)
         );
 
-        console.log("📋 추천 퀘스트 데이터:", recommended);
+        // console.log("📋 추천 퀘스트 데이터:", recommended);
         setRecommendedQuests(recommended);
       }
     };
@@ -539,7 +483,7 @@ export default function QuestsPage() {
 
             // 미션이 완료된 경우 모달을 열지 않음
             if (userMission?.status === "completed") {
-              console.log("이미 완료된 미션입니다:", mission.title);
+              // console.log("이미 완료된 미션입니다:", mission.title);
               return;
             }
 
@@ -552,18 +496,17 @@ export default function QuestsPage() {
         <MissionModal
           isOpen={isMissionModalOpen}
           onClose={() => {
-            console.log("MissionModal 닫기 - QuestModal 상태 유지");
+            // console.log("MissionModal 닫기 - QuestModal 상태 유지");
             setIsMissionModalOpen(false);
             setIsQuestModalOpen(true);
             // QuestModal은 열린 상태로 유지
           }}
           mission={selectedMission}
-          onMissionComplete={async (missionId, inputs) => {
-            console.log("미션 완료:", { missionId, inputs });
+          onMissionComplete={async () => {
             // 여기에 미션 완료 로직 추가
           }}
           onMissionStatusUpdate={async (missionId, status) => {
-            console.log("미션 상태 업데이트:", { missionId, status });
+            // console.log("미션 상태 업데이트:", { missionId, status });
 
             try {
               // Supabase에서 user_missions 테이블 업데이트
@@ -585,7 +528,7 @@ export default function QuestsPage() {
                 )
               );
 
-              console.log("미션 상태 업데이트 성공:", { missionId, status });
+              // console.log("미션 상태 업데이트 성공:", { missionId, status });
             } catch (error) {
               console.error("미션 상태 업데이트 중 오류:", error);
               throw error;

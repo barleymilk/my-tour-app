@@ -13,6 +13,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import { getPhotoPath } from "@/hooks/useSupabase";
+import Image from "next/image";
 
 export interface User {
   id: string;
@@ -28,6 +29,7 @@ export interface User {
   visited_attractions_cnt: number;
   friends_cnt: number;
   badges_cnt: number;
+  avatar_url?: string;
 }
 
 export interface UserBadge {
@@ -109,10 +111,10 @@ export default function ProfilePage() {
       }
       // 각 배지의 이미지 URL을 public URL로 변환
       const badgesWithPublicUrls = await Promise.all(
-        userBadges.map(async (badge) => {
-          if (badge.badges.image_url) {
+        userBadges.map(async (badge, index) => {
+          if (badge.badges[index].image_url) {
             const publicUrl = await getPhotoPath(
-              badge.badges.image_url,
+              badge.badges[index].image_url,
               "badges"
             );
             return {
@@ -131,7 +133,7 @@ export default function ProfilePage() {
 
     fetchUsers();
     fetchBadges();
-  }, []);
+  }, [router, user]);
   // console.log("data", userProfile);
   // console.log("badges", userBadges);
 
@@ -249,8 +251,8 @@ export default function ProfilePage() {
           <CardContent>
             {userBadges.length > 0 ? (
               <div className="grid grid-cols-2 gap-4">
-                {userBadges.map((userBadge) => {
-                  const badge = userBadge.badges;
+                {userBadges.map((userBadge, index) => {
+                  const badge = userBadge.badges[index]; // 배열의 첫 번째 요소
 
                   if (!badge) return null;
 
@@ -261,10 +263,12 @@ export default function ProfilePage() {
                     >
                       <div className="text-3xl mb-2">
                         {badge.image_url ? (
-                          <img
+                          <Image
                             src={badge.image_url}
                             alt={badge.title}
-                            className="w-12 h-12 mx-auto object-cover rounded-full"
+                            width={48}
+                            height={48}
+                            className="mx-auto object-cover rounded-full"
                           />
                         ) : (
                           "🏆"

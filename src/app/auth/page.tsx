@@ -15,7 +15,7 @@ export default function AuthPage() {
   // mode가 바뀔 때 error 초기화
   useEffect(() => {
     clearError();
-  }, [mode]);
+  }, [mode, clearError]);
 
   const handleModeChange = (newMode: AuthMode) => {
     setMode(newMode);

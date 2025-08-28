@@ -1,6 +1,12 @@
 "use client";
 
-import { createContext, useContext, useEffect, useState } from "react";
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  useCallback,
+} from "react";
 import { useRouter } from "next/navigation";
 import { supabase } from "@/lib/supabase";
 import {
@@ -35,17 +41,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           data: { session },
         } = await supabase.auth.getSession();
         if (session) {
-          const user = session.user;
           setState((prev) => ({
             ...prev,
-            user: {
-              id: user.id,
-              email: user.email!,
-              name: user.user_metadata?.name || null,
-              avatar_url: user.user_metadata?.avatar_url || null,
-              created_at: user.created_at,
-              updated_at: user.updated_at,
-            },
+            user: session.user,
             session,
             loading: false,
           }));
@@ -65,16 +63,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (session) {
-        const user = session.user;
         setState({
-          user: {
-            id: user.id,
-            email: user.email!,
-            name: user.user_metadata?.name || null,
-            avatar_url: user.user_metadata?.avatar_url || null,
-            created_at: user.created_at,
-            updated_at: user.updated_at,
-          },
+          user: session.user,
           session,
           loading: false,
           error: null,
@@ -148,9 +138,9 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
-  const clearError = () => {
+  const clearError = useCallback(() => {
     setState((prev) => ({ ...prev, error: null }));
-  };
+  }, []);
 
   const resendVerificationEmail = async (email: string) => {
     try {
@@ -224,7 +214,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         throw new Error(`프로필 생성 실패: ${error.message}`);
       }
 
-      console.log("프로필 생성 성공:", data);
+      // console.log("프로필 생성 성공:", data);
       return data;
     } catch (error) {
       console.error("프로필 생성 실패:", error);

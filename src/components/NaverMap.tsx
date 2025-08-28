@@ -16,8 +16,130 @@ interface NaverMapProps {
 
 declare global {
   interface Window {
-    naver: any;
+    naver: {
+      maps: {
+        Map: new (element: HTMLElement, options: MapOptions) => NaverMap;
+        LatLng: new (lat: number, lng: number) => NaverLatLng;
+        LatLngBounds: new () => NaverLatLngBounds;
+        Marker: new (options: MarkerOptions) => NaverMarker;
+        InfoWindow: new (options: InfoWindowOptions) => NaverInfoWindow;
+        Polyline: new (options: PolylineOptions) => NaverPolyline;
+        ZoomControlStyle: {
+          SMALL: number;
+          LARGE: number;
+        };
+        Position: {
+          TOP_LEFT: number;
+          TOP_CENTER: number;
+          TOP_RIGHT: number;
+          LEFT_TOP: number;
+          LEFT_CENTER: number;
+          LEFT_BOTTOM: number;
+          RIGHT_TOP: number;
+          RIGHT_CENTER: number;
+          RIGHT_BOTTOM: number;
+          BOTTOM_LEFT: number;
+          BOTTOM_CENTER: number;
+          BOTTOM_RIGHT: number;
+        };
+        Size: new (width: number, height: number) => NaverSize;
+        Point: new (x: number, y: number) => NaverPoint;
+        Event: {
+          addListener: (
+            target: NaverMap | NaverMarker,
+            event: string,
+            listener: (event: Event) => void
+          ) => void;
+          once: (
+            target: NaverMap | NaverMarker,
+            event: string,
+            listener: (event: Event) => void
+          ) => void;
+        };
+      };
+    };
   }
+}
+
+// Naver Maps 타입 정의
+interface MapOptions {
+  center: NaverLatLng;
+  zoom: number;
+  mapTypeControl?: boolean;
+  zoomControl?: boolean;
+  zoomControlOptions?: {
+    style: number;
+    position: number;
+  };
+}
+
+interface MarkerOptions {
+  position: NaverLatLng;
+  map: NaverMap;
+  title?: string;
+  icon?: {
+    content: string;
+    size: NaverSize;
+    anchor: NaverPoint;
+  };
+}
+
+interface InfoWindowOptions {
+  content: string;
+}
+
+interface PolylineOptions {
+  path: NaverLatLng[];
+  strokeColor: string;
+  strokeWeight: number;
+  strokeOpacity: number;
+  strokeStyle: string;
+  map: NaverMap;
+}
+
+interface NaverMap {
+  center: NaverLatLng;
+  zoom: number;
+  destroy(): void;
+  refresh(): void;
+  fitBounds(bounds: NaverLatLngBounds): void;
+}
+
+interface NaverLatLng {
+  lat(): number;
+  lng(): number;
+}
+
+interface NaverLatLngBounds {
+  extend(latLng: NaverLatLng): void;
+}
+
+interface NaverMarker {
+  getPosition(): NaverLatLng;
+}
+
+interface NaverInfoWindow {
+  open(map: NaverMap, marker: NaverMarker): void;
+  close(): void;
+  getContent(): string;
+  setContent(content: string): void;
+}
+
+interface NaverPolyline {
+  getPath(): NaverLatLng[];
+  setPath(path: NaverLatLng[]): void;
+  getMap(): NaverMap | null;
+  setMap(map: NaverMap | null): void;
+}
+
+interface NaverSize {
+  width: number;
+  height: number;
+}
+
+interface NaverPoint {
+  x: number;
+  y: number;
 }
 
 const NaverMap = ({
@@ -27,21 +149,12 @@ const NaverMap = ({
   markers = [],
 }: NaverMapProps) => {
   const mapRef = useRef<HTMLDivElement>(null);
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const mapInstanceRef = useRef<any>(null);
+  const mapInstanceRef = useRef<NaverMap | null>(null);
   const [isScriptLoaded, setIsScriptLoaded] = useState(false);
-
-  // 스크립트 로드 상태 변경 추적
-  useEffect(() => {
-    console.log("isScriptLoaded 상태 변경:", isScriptLoaded);
-  }, [isScriptLoaded]);
 
   // 네이버 지도 스크립트 로드
   const loadNaverMapScript = () => {
-    console.log("스크립트 로드 시작");
-
     if (window.naver) {
-      console.log("이미 naver 객체가 존재함");
       setIsScriptLoaded(true);
       return;
     }
@@ -50,24 +163,13 @@ const NaverMap = ({
     script.src = `https://oapi.map.naver.com/openapi/v3/maps.js?ncpKeyId=${process.env.NEXT_PUBLIC_NAVER_MAP_CLIENT_ID}`;
     script.async = true;
     script.onload = () => {
-      console.log("네이버 지도 스크립트 로드 완료!");
-
-      // naver 객체가 실제로 설정될 때까지 대기
       const checkNaverObject = () => {
         if (window.naver && window.naver.maps) {
-          console.log("naver.maps 객체 확인됨");
           setIsScriptLoaded(true);
-
-          // 상태 업데이트 후 강제로 useEffect 재실행
-          setTimeout(() => {
-            console.log("스크립트 로드 완료 후 강제 실행");
-          }, 100);
         } else {
-          console.log("naver.maps 객체 대기 중...");
           setTimeout(checkNaverObject, 100);
         }
       };
-
       checkNaverObject();
     };
     script.onerror = (error) => {
@@ -81,32 +183,18 @@ const NaverMap = ({
   }, []);
 
   useEffect(() => {
-    console.log("지도 생성 useEffect 실행:", {
-      hasMapRef: !!mapRef.current,
-      isScriptLoaded,
-      hasNaver: !!window.naver,
-      hasNaverMaps: !!(window.naver && window.naver.maps),
-    });
-
     if (
       !mapRef.current ||
       !isScriptLoaded ||
       !window.naver ||
       !window.naver.maps
     ) {
-      console.log("지도 생성 조건 미충족:", {
-        hasMapRef: !!mapRef.current,
-        isScriptLoaded,
-        hasNaver: !!window.naver,
-        hasNaverMaps: !!(window.naver && window.naver.maps),
-      });
       return;
     }
 
     // 기존 지도 인스턴스가 있다면 정리
     if (mapInstanceRef.current) {
       try {
-        console.log("기존 지도 인스턴스 정리 중...");
         mapInstanceRef.current.destroy();
         mapInstanceRef.current = null;
       } catch (error) {
@@ -117,17 +205,7 @@ const NaverMap = ({
     // 컨테이너 내용 정리
     if (mapRef.current) {
       mapRef.current.innerHTML = "";
-      console.log("지도 컨테이너 정리 완료");
     }
-
-    console.log("지도 생성 시작:", {
-      center,
-      zoom,
-      containerSize: {
-        width: mapRef.current.offsetWidth,
-        height: mapRef.current.offsetHeight,
-      },
-    });
 
     // 마커들의 경계(bounds) 계산
     let mapCenter = new window.naver.maps.LatLng(center.lat, center.lng);
@@ -153,49 +231,14 @@ const NaverMap = ({
       const lngDiff = maxLng - minLng;
       const maxDiff = Math.max(latDiff, lngDiff);
 
-      // 경계 크기에 따른 zoom 레벨 매핑 (더 정교한 계산)
-      if (maxDiff > 20) calculatedZoom = 4; // 국가 레벨
-      else if (maxDiff > 10) calculatedZoom = 5; // 광역시/도 레벨
-      else if (maxDiff > 5) calculatedZoom = 7; // 시/군/구 레벨
-      else if (maxDiff > 2) calculatedZoom = 9; // 동/읍/면 레벨
-      else if (maxDiff > 1) calculatedZoom = 11; // 상세 지역 레벨
-      else if (maxDiff > 0.5) calculatedZoom = 13; // 도시 상세 레벨
-      else if (maxDiff > 0.1) calculatedZoom = 15; // 거리 레벨
-      else calculatedZoom = 17; // 건물 레벨
-
-      console.log("마커 경계 계산:", {
-        bounds: { minLat, maxLat, minLng, maxLng },
-        center: { centerLat, centerLng },
-        maxDiff,
-        calculatedZoom,
-      });
-
-      // 마커들이 모두 보이도록 경계 설정
-      const bounds = new window.naver.maps.LatLngBounds();
-      markers.forEach((markerData) => {
-        bounds.extend(
-          new window.naver.maps.LatLng(
-            markerData.position.lat,
-            markerData.position.lng
-          )
-        );
-      });
-
-      // 경계에 여백 추가 (20% 여백)
-      const latPadding = latDiff * 0.2;
-      const lngPadding = lngDiff * 0.2;
-
-      bounds.extend(
-        new window.naver.maps.LatLng(minLat - latPadding, minLng - lngPadding)
-      );
-      bounds.extend(
-        new window.naver.maps.LatLng(maxLat + latPadding, maxLng + lngPadding)
-      );
-
-      console.log("경계 설정 준비 완료:", {
-        bounds: bounds.toString(),
-        padding: { latPadding, lngPadding },
-      });
+      if (maxDiff > 20) calculatedZoom = 4;
+      else if (maxDiff > 10) calculatedZoom = 5;
+      else if (maxDiff > 5) calculatedZoom = 7;
+      else if (maxDiff > 2) calculatedZoom = 9;
+      else if (maxDiff > 1) calculatedZoom = 11;
+      else if (maxDiff > 0.5) calculatedZoom = 13;
+      else if (maxDiff > 0.1) calculatedZoom = 15;
+      else calculatedZoom = 17;
     }
 
     // 지도 생성
@@ -211,12 +254,10 @@ const NaverMap = ({
     });
 
     mapInstanceRef.current = map;
-    console.log("지도 인스턴스 생성 완료:", map);
 
     // 마커들이 모두 보이도록 경계 적용
     if (markers.length > 0 && window.naver.maps.LatLngBounds) {
       try {
-        // 지도가 완전히 로드된 후 경계 적용
         setTimeout(() => {
           if (map && mapRef.current) {
             const bounds = new window.naver.maps.LatLngBounds();
@@ -229,7 +270,6 @@ const NaverMap = ({
               );
             });
 
-            // 경계에 여백 추가 (20% 여백)
             const lats = markers.map((m) => m.position.lat);
             const lngs = markers.map((m) => m.position.lng);
             const minLat = Math.min(...lats);
@@ -253,44 +293,18 @@ const NaverMap = ({
               )
             );
 
-            // 지도 뷰를 경계에 맞춤
             map.fitBounds(bounds);
-
-            console.log("지도 경계 적용 완료:", {
-              bounds: bounds.toString(),
-              padding: { latPadding, lngPadding },
-            });
           }
-        }, 500); // 지도 로드 후 0.5초 뒤에 경계 적용
+        }, 500);
       } catch (error) {
         console.error("경계 적용 실패:", error);
       }
     }
 
-    // 지도가 실제로 렌더링되었는지 확인
-    setTimeout(() => {
-      if (map && mapRef.current) {
-        const rect = mapRef.current.getBoundingClientRect();
-        console.log("지도 렌더링 확인:", {
-          containerSize: rect,
-          mapInstance: !!map,
-          hasMapElement: mapRef.current.children.length > 0,
-        });
-      }
-    }, 100);
-
-    // 기본 마커 추가 (중심점)
-    // const defaultMarker = new window.naver.maps.Marker({
-    //   position: new window.naver.maps.LatLng(center.lat, center.lng),
-    //   map: map,
-    //   title: "현재 위치",
-    // });
-
     // 사용자 정의 마커 추가
-    const markerInstances: any[] = [];
+    const markerInstances: NaverMarker[] = [];
 
     markers.forEach((markerData, index) => {
-      // order 정보를 포함한 커스텀 마커 HTML 생성
       const markerHtml = [
         '<div class="custom-marker">',
         '<div class="marker-circle">',
@@ -335,7 +349,6 @@ const NaverMap = ({
 
     // 마커들을 순서대로 연결하는 선 그리기
     if (markerInstances.length > 1) {
-      // order 기준으로 마커들을 정렬
       const sortedMarkers = [...markerInstances].sort((a, b) => {
         const aOrder =
           markers.find(
@@ -352,14 +365,13 @@ const NaverMap = ({
         return aOrder - bOrder;
       });
 
-      // 연속된 마커들 사이에 선 그리기
       for (let i = 0; i < sortedMarkers.length - 1; i++) {
         const currentMarker = sortedMarkers[i];
         const nextMarker = sortedMarkers[i + 1];
 
-        const polyline = new window.naver.maps.Polyline({
+        new window.naver.maps.Polyline({
           path: [currentMarker.getPosition(), nextMarker.getPosition()],
-          strokeColor: "#3B82F6", // 파란색
+          strokeColor: "#3B82F6",
           strokeWeight: 3,
           strokeOpacity: 0.8,
           strokeStyle: "solid",
@@ -370,14 +382,10 @@ const NaverMap = ({
 
     // 지도 로드 완료 이벤트
     window.naver.maps.Event.once(map, "init", () => {
-      console.log("네이버 지도가 로드되었습니다.");
-
-      // 모달에서 지도가 제대로 표시되도록 강제 리사이즈
       setTimeout(() => {
         if (map && mapRef.current) {
           try {
             map.refresh();
-            console.log("지도 리사이즈 완료");
           } catch (error) {
             console.error("지도 리사이즈 실패:", error);
           }
@@ -390,7 +398,6 @@ const NaverMap = ({
       if (map && mapRef.current) {
         try {
           map.refresh();
-          console.log("지도 강제 리사이즈 완료");
         } catch (error) {
           console.error("지도 강제 리사이즈 실패:", error);
         }
@@ -401,16 +408,11 @@ const NaverMap = ({
     setTimeout(() => {
       if (map && mapRef.current) {
         try {
-          // 지도 컨테이너 크기 강제 업데이트
           const container = mapRef.current;
           const rect = container.getBoundingClientRect();
-          console.log("컨테이너 크기:", rect);
 
           if (rect.width > 0 && rect.height > 0) {
             map.refresh();
-            console.log("지도 최종 리사이즈 완료");
-          } else {
-            console.log("컨테이너 크기가 0입니다");
           }
         } catch (error) {
           console.error("지도 최종 리사이즈 실패:", error);
@@ -421,7 +423,6 @@ const NaverMap = ({
     return () => {
       if (mapInstanceRef.current) {
         try {
-          console.log("컴포넌트 언마운트 시 지도 정리 중...");
           mapInstanceRef.current.destroy();
           mapInstanceRef.current = null;
         } catch (error) {
@@ -429,7 +430,7 @@ const NaverMap = ({
         }
       }
     };
-  }, [center.lat, center.lng, zoom, markers, isScriptLoaded]);
+  }, [center, zoom, markers, isScriptLoaded]);
 
   return (
     <div

@@ -1,18 +1,12 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo, useCallback } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import {
-  chatRooms,
-  chatMessages,
-  friends,
-  getMessagesByChatRoom,
-} from "@/data/friends";
-import { ChatRoom, ChatMessage } from "@/data/types";
+import { chatRooms, friends, getMessagesByChatRoom } from "@/data/friends";
+import { ChatRoom } from "@/data/types";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 import { ArrowLeft } from "lucide-react";
@@ -37,31 +31,38 @@ export default function ChatPage() {
       .includes(searchQuery.toLowerCase());
   });
 
-  const currentMessages = selectedChatRoom
-    ? getMessagesByChatRoom(selectedChatRoom.chat_room_id)
-    : [];
+  const getMessagesByChatRoomCallback = useCallback(
+    (chatRoomId: string) => getMessagesByChatRoom(chatRoomId),
+    []
+  );
 
-  const getFriendFromChatRoom = (chatRoom: ChatRoom) => {
+  const currentMessages = useMemo(() => {
+    return selectedChatRoom
+      ? getMessagesByChatRoomCallback(selectedChatRoom.chat_room_id)
+      : [];
+  }, [selectedChatRoom, getMessagesByChatRoomCallback]);
+
+  const getFriendFromChatRoom = useCallback((chatRoom: ChatRoom) => {
     return friends.find(
       (friend) =>
         chatRoom.participants.includes(friend.friend_user_id) &&
         friend.friend_user_id !== "USER-001"
     );
-  };
+  }, []);
 
-  const scrollToBottom = () => {
+  const scrollToBottom = useCallback(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  };
+  }, []);
 
   useEffect(() => {
     scrollToBottom();
-  }, [currentMessages]);
+  }, [currentMessages, scrollToBottom]);
 
   const handleSendMessage = () => {
     if (!newMessage.trim() || !selectedChatRoom) return;
 
     // 새 메시지 전송 로직
-    console.log("메시지 전송:", newMessage);
+    // console.log("메시지 전송:", newMessage);
     setNewMessage("");
   };
 
@@ -109,7 +110,9 @@ export default function ChatPage() {
                 {filteredChatRooms.map((chatRoom) => {
                   const friend = getFriendFromChatRoom(chatRoom);
                   const isSelected =
-                    selectedChatRoom?.chat_room_id === chatRoom.chat_room_id;
+                    selectedChatRoom &&
+                    (selectedChatRoom as ChatRoom).chat_room_id ===
+                      chatRoom.chat_room_id;
 
                   return (
                     <div

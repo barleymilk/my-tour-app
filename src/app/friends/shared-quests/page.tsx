@@ -7,7 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Progress } from "@/components/ui/progress";
 import { sharedQuests, friends } from "@/data/friends";
-import { SharedQuest } from "@/data/types";
+
 import Navigation from "@/components/Navigation";
 import Header from "@/components/Header";
 

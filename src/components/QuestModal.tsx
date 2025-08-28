@@ -11,7 +11,7 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import NaverMap from "@/components/NaverMap";
-import { Mission, Quest, inProgressQuests } from "@/data";
+import { Mission, Quest } from "@/data";
 
 interface QuestModalProps {
   isOpen: boolean;
@@ -75,7 +75,7 @@ const QuestModal = ({
 
   const { progress, total } = getQuestProgress(quest?.quest_id || "");
 
-  console.log("@@@@@@@@", quest?.npc_image_url);
+  // console.log("@@@@@@@@", quest?.npc_image_url);
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -176,12 +176,12 @@ const QuestModal = ({
                   .sort((a, b) => a.order - b.order)
                   .map((missionItem) => {
                     const status = getMissionStatus(missionItem.mission_id);
-                    console.log(
-                      "###missionItem",
-                      missionItem,
-                      "status:",
-                      status
-                    );
+                    // console.log(
+                    //   "###missionItem",
+                    //   missionItem,
+                    //   "status:",
+                    //   status
+                    // );
                     return (
                       <div
                         key={missionItem.mission_id}

@@ -1,5 +1,5 @@
 import { supabase } from "@/lib/supabase";
-import { LoginCredentials, SignupCredentials, User } from "@/types/auth";
+import { LoginCredentials, SignupCredentials, UserProfile } from "@/types/auth";
 
 export async function signInWithEmail(credentials: LoginCredentials) {
   const { data, error } = await supabase.auth.signInWithPassword({
@@ -65,7 +65,9 @@ export async function resetPassword(email: string) {
   }
 }
 
-export async function getUserProfile(userId: string): Promise<User | null> {
+export async function getUserProfile(
+  userId: string
+): Promise<UserProfile | null> {
   const { data, error } = await supabase
     .from("profiles")
     .select("*")
@@ -81,7 +83,7 @@ export async function getUserProfile(userId: string): Promise<User | null> {
 
 export async function updateUserProfile(
   userId: string,
-  updates: Partial<User>
+  updates: Partial<UserProfile>
 ) {
   const { data, error } = await supabase
     .from("profiles")

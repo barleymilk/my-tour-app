@@ -11,36 +11,22 @@ import MissionModal from "@/components/MissionModal";
 import { Quest, Mission, quests, inProgressQuests } from "@/data";
 import Navigation from "@/components/Navigation";
 import { getPhotoPath } from "@/hooks/useSupabase";
-import { User } from "./profile/page";
 import { UserBadge } from "./profile/page";
 import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter } from "next/navigation";
 import { Star } from "lucide-react";
+import Image from "next/image";
 
 export default function Home() {
-  const { user, logout } = useAuth();
+  const { user } = useAuth();
   const router = useRouter();
   const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
   const [selectedMission, setSelectedMission] = useState<Mission | null>(null);
   const [isQuestModalOpen, setIsQuestModalOpen] = useState(false);
   const [isRewardModalOpen, setIsRewardModalOpen] = useState(false);
   const [isMissionModalOpen, setIsMissionModalOpen] = useState(false);
-  const [userProfile, setUserProfile] = useState<User>({
-    id: "",
-    nickname: "",
-    level: 1,
-    exp: 0,
-    age: 0,
-    gender: "",
-    is_single: false,
-    has_child: false,
-    tags: [],
-    completed_quests_cnt: 0,
-    visited_attractions_cnt: 0,
-    friends_cnt: 0,
-    badges_cnt: 0,
-  });
+
   const [userBadges, setUserBadges] = useState<UserBadge[]>([]);
 
   useEffect(() => {
@@ -49,19 +35,6 @@ export default function Home() {
       router.push("/auth");
       return;
     }
-
-    const fetchUsers = async () => {
-      const { data, error } = await supabase
-        .from("users")
-        .select("*")
-        .eq("user_id", user.id)
-        .single();
-      if (error) {
-        console.error("유저 정보 조회 실패:", error);
-      } else {
-        setUserProfile(data as unknown as User);
-      }
-    };
 
     const fetchBadges = async () => {
       const { data: userBadges, error: userBadgesError } = await supabase
@@ -90,10 +63,10 @@ export default function Home() {
       }
       // 각 배지의 이미지 URL을 public URL로 변환
       const badgesWithPublicUrls = await Promise.all(
-        userBadges.map(async (badge) => {
-          if (badge.badges.image_url) {
+        userBadges.map(async (badge, index) => {
+          if (badge.badges[index].image_url) {
             const publicUrl = await getPhotoPath(
-              badge.badges.image_url,
+              badge.badges[index].image_url,
               "badges"
             );
             return {
@@ -110,9 +83,8 @@ export default function Home() {
       setUserBadges(badgesWithPublicUrls as unknown as UserBadge[]);
     };
 
-    fetchUsers();
     fetchBadges();
-  }, []);
+  }, [router, user]);
 
   const handleQuestClick = (quest: Quest | null) => {
     if (quest) {
@@ -215,7 +187,7 @@ export default function Home() {
           <ScrollArea className="w-full">
             {userBadges.length > 0 ? (
               <div className="flex w-max space-x-4">
-                {userBadges.map((userBadge) => {
+                {userBadges.map((userBadge, index) => {
                   const badge = userBadge.badges;
 
                   if (!badge) return null;
@@ -226,18 +198,20 @@ export default function Home() {
                       className="text-center p-3 border rounded-lg w-30"
                     >
                       <div className="text-3xl mb-2">
-                        {badge.image_url ? (
-                          <img
-                            src={badge.image_url}
-                            alt={badge.title}
-                            className="w-12 h-12 mx-auto object-cover rounded-full"
+                        {badge[index].image_url ? (
+                          <Image
+                            src={badge[index].image_url}
+                            alt={badge[index].title}
+                            width={48}
+                            height={48}
+                            className="mx-auto object-cover rounded-full"
                           />
                         ) : (
                           "🏆"
                         )}
                       </div>
                       <p className="font-semibold text-sm truncate">
-                        {badge.title}
+                        {badge[index].title}
                       </p>
                     </div>
                   );

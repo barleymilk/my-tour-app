@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Mission, InputCondition } from "@/data";
+import { Mission } from "@/data";
 import dynamic from "next/dynamic";
 
 // Lottie 컴포넌트를 동적으로 import
@@ -47,7 +47,7 @@ const MissionModal = ({
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [showTrophy, setShowTrophy] = useState(false);
 
-  console.log("@@@mission", mission);
+  // console.log("@@@mission", mission);
 
   if (!isOpen || !mission) return null;
 
@@ -118,15 +118,15 @@ const MissionModal = ({
   const renderInputField = (missionType: string, index: number) => {
     const inputKey = `input_${index}`;
 
-    console.log(`renderInputField 호출됨:`, {
-      index,
-      inputKey,
-      missionType,
-    });
+    // console.log(`renderInputField 호출됨:`, {
+    //   index,
+    //   inputKey,
+    //   missionType,
+    // });
 
     switch (missionType) {
       case "text":
-        console.log("텍스트 입력 필드 렌더링");
+        // console.log("텍스트 입력 필드 렌더링");
         return (
           <div key={inputKey} className="space-y-2">
             <Label htmlFor={inputKey}>
@@ -147,7 +147,7 @@ const MissionModal = ({
         );
 
       case "photo":
-        console.log("사진 입력 필드 렌더링");
+        // console.log("사진 입력 필드 렌더링");
         return (
           <div key={inputKey} className="space-y-2">
             <Label htmlFor={inputKey}>
@@ -204,7 +204,7 @@ const MissionModal = ({
         );
 
       case "audio":
-        console.log("음성 입력 필드 렌더링");
+        // console.log("음성 입력 필드 렌더링");
         return (
           <div key={inputKey} className="space-y-2">
             <Label htmlFor={inputKey}>
@@ -260,7 +260,7 @@ const MissionModal = ({
         );
 
       case "quiz":
-        console.log("퀴즈 입력 필드 렌더링");
+        // console.log("퀴즈 입력 필드 렌더링");
         return (
           <div key={inputKey} className="space-y-2">
             <Label htmlFor={inputKey}>
@@ -280,7 +280,7 @@ const MissionModal = ({
         );
 
       case "purchase":
-        console.log("구매 입력 필드 렌더링");
+        // console.log("구매 입력 필드 렌더링");
         return (
           <div key={inputKey} className="space-y-2">
             <Label htmlFor={inputKey}>
@@ -336,7 +336,7 @@ const MissionModal = ({
         );
 
       default:
-        console.log("알 수 없는 미션 타입:", missionType);
+        // console.log("알 수 없는 미션 타입:", missionType);
         return (
           <div key={inputKey} className="space-y-2">
             <Label htmlFor={inputKey}>
@@ -358,29 +358,29 @@ const MissionModal = ({
 
   const isFormValid = () => {
     if (!mission?.type) {
-      console.log("미션 타입이 없음 - 폼 유효함");
+      // console.log("미션 타입이 없음 - 폼 유효함");
       return true;
     }
 
-    console.log("폼 유효성 검사 시작:", mission.type);
+    // console.log("폼 유효성 검사 시작:", mission.type);
 
     // 특정 타입들은 입력이 필수가 아님
     if (["purchase", "time", "action", "multiple"].includes(mission.type)) {
-      console.log("이 미션 타입은 입력이 필수가 아님");
+      // console.log("이 미션 타입은 입력이 필수가 아님");
       return true;
     }
 
     const inputKey = `input_0`;
     const value = inputs[inputKey];
 
-    console.log(`입력 필드 검사:`, {
-      inputKey,
-      value,
-      missionType: mission.type,
-    });
+    // console.log(`입력 필드 검사:`, {
+    //   inputKey,
+    //   value,
+    //   missionType: mission.type,
+    // });
 
     if (value === undefined || value === null || value === "") {
-      console.log(`입력 필드: 값이 없음`);
+      // console.log(`입력 필드: 값이 없음`);
       return false;
     }
 
@@ -389,7 +389,7 @@ const MissionModal = ({
       case "text":
         const textValue = value as string;
         if (textValue.trim().length === 0) {
-          console.log(`텍스트 입력: 빈 문자열`);
+          // console.log(`텍스트 입력: 빈 문자열`);
           return false;
         }
         break;
@@ -397,13 +397,13 @@ const MissionModal = ({
       case "audio":
       case "purchase":
         if (!(value instanceof File)) {
-          console.log(`파일 입력: 파일이 아님`);
+          // console.log(`파일 입력: 파일이 아님`);
           return false;
         }
         break;
     }
 
-    console.log(`입력 필드: 유효함`);
+    // console.log(`입력 필드: 유효함`);
     return true;
   };
 

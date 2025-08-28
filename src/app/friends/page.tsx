@@ -4,11 +4,10 @@ import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { friends, friendRequests, searchUsers } from "@/data/friends";
-import { Friend, FriendRequest } from "@/data/types";
 import Header from "@/components/Header";
 import Navigation from "@/components/Navigation";
 
@@ -27,24 +26,20 @@ export default function FriendsPage() {
     }
   };
 
-  const handleAddFriend = (userId: string) => {
+  const handleAddFriend = () => {
     // 친구 추가 로직
-    console.log("친구 추가:", userId);
   };
 
-  const handleAcceptRequest = (requestId: string) => {
+  const handleAcceptRequest = () => {
     // 친구 요청 수락 로직
-    console.log("친구 요청 수락:", requestId);
   };
 
-  const handleRejectRequest = (requestId: string) => {
+  const handleRejectRequest = () => {
     // 친구 요청 거절 로직
-    console.log("친구 요청 거절:", requestId);
   };
 
-  const handleRemoveFriend = (friendId: string) => {
+  const handleRemoveFriend = () => {
     // 친구 삭제 로직
-    console.log("친구 삭제:", friendId);
   };
 
   return (
@@ -114,9 +109,7 @@ export default function FriendsPage() {
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() =>
-                                handleRemoveFriend(friend.friend_id)
-                              }
+                              onClick={() => handleRemoveFriend()}
                             >
                               삭제
                             </Button>
@@ -170,18 +163,14 @@ export default function FriendsPage() {
                           <div className="flex space-x-2">
                             <Button
                               size="sm"
-                              onClick={() =>
-                                handleAcceptRequest(request.request_id)
-                              }
+                              onClick={() => handleAcceptRequest()}
                             >
                               수락
                             </Button>
                             <Button
                               variant="outline"
                               size="sm"
-                              onClick={() =>
-                                handleRejectRequest(request.request_id)
-                              }
+                              onClick={() => handleRejectRequest()}
                             >
                               거절
                             </Button>
@@ -237,7 +226,7 @@ export default function FriendsPage() {
                               ) : (
                                 <Button
                                   size="sm"
-                                  onClick={() => handleAddFriend(user.user_id)}
+                                  onClick={() => handleAddFriend()}
                                 >
                                   친구 추가
                                 </Button>

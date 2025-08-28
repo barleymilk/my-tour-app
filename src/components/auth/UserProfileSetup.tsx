@@ -97,11 +97,11 @@ const tagCategories = [
 ];
 
 export default function UserProfileSetup() {
-  const { createUserProfile, user } = useAuth();
+  const { createUserProfile } = useAuth();
   const router = useRouter();
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
-    nickname: user?.name || "",
+    nickname: "",
     age: 20,
     gender: "none",
     is_single: true,
