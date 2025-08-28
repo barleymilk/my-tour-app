@@ -170,6 +170,68 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const getUserProfile = async () => {
+    try {
+      if (!state.user?.id) return null;
+
+      const { data, error } = await supabase
+        .from("users")
+        .select("*")
+        .eq("user_id", state.user.id)
+        .single();
+
+      if (error && error.code !== "PGRST116") {
+        // PGRST116는 "결과가 없음" 에러
+        throw error;
+      }
+
+      return data;
+    } catch (error) {
+      console.error("프로필 조회 실패:", error);
+      return null;
+    }
+  };
+
+  const createUserProfile = async (profileData: {
+    nickname: string;
+    age: number;
+    gender: string;
+    is_single: boolean;
+    has_child: boolean;
+    tags: string[];
+  }) => {
+    try {
+      if (!state.user?.id) throw new Error("사용자 정보가 없습니다");
+
+      const { data, error } = await supabase
+        .from("users")
+        .insert({
+          user_id: state.user.id,
+          nickname: profileData.nickname,
+          level: 1,
+          exp: 0,
+          age: profileData.age,
+          gender: profileData.gender,
+          is_single: profileData.is_single,
+          has_child: profileData.has_child,
+          tags: profileData.tags,
+        })
+        .select()
+        .single();
+
+      if (error) {
+        console.error("Supabase 에러:", error);
+        throw new Error(`프로필 생성 실패: ${error.message}`);
+      }
+
+      console.log("프로필 생성 성공:", data);
+      return data;
+    } catch (error) {
+      console.error("프로필 생성 실패:", error);
+      throw error;
+    }
+  };
+
   const value: AuthContextType = {
     user: state.user,
     session: state.session,
@@ -181,6 +243,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     resetPassword: resetPasswordHandler,
     clearError,
     resendVerificationEmail,
+    getUserProfile,
+    createUserProfile,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

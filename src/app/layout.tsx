@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import "./globals.css";
 import { AuthProvider } from "@/contexts/AuthContext";
+import ProfileCheck from "@/components/auth/ProfileCheck";
 
 export const metadata: Metadata = {
   title: "Create Next App",
@@ -15,10 +16,14 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className="font-['SUITE-Regular'] antialiased">
-        {/* PC에서 모바일처럼 보이도록 최대 너비 제한 */}
-        <div className="mx-auto max-w-md min-h-screen bg-white shadow-lg">
-          <AuthProvider>{children}</AuthProvider>
-        </div>
+        <AuthProvider>
+          <ProfileCheck>
+            {/* PC에서 모바일처럼 보이도록 최대 너비 제한 */}
+            <div className="mx-auto max-w-md min-h-screen bg-white shadow-lg">
+              {children}
+            </div>
+          </ProfileCheck>
+        </AuthProvider>
       </body>
     </html>
   );

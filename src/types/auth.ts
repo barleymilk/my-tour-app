@@ -1,3 +1,5 @@
+import { User as SupabaseUser } from "@supabase/supabase-js";
+
 export interface LoginCredentials {
   email: string;
   password: string;
@@ -10,24 +12,28 @@ export interface SignupCredentials {
   confirmPassword: string;
 }
 
-export interface User {
-  readonly id: string;
-  name: string;
-  email: string;
-  avatar_url: string | null;
-  created_at: string;
-  updated_at?: string;
+export interface UserProfile {
+  id: string;
+  user_id: string;
+  nickname: string;
+  level: number;
+  exp: number;
+  age: number;
+  gender: string;
+  is_single: boolean;
+  has_child: boolean;
+  tags: string[];
 }
 
 export interface AuthState {
-  user: User | null;
+  user: SupabaseUser | null;
   session: unknown | null;
   loading: boolean;
   error: string | null;
 }
 
 export interface AuthContextType {
-  user: User | null;
+  user: SupabaseUser | null;
   session: unknown | null;
   loading: boolean;
   error: string | null;
@@ -37,4 +43,13 @@ export interface AuthContextType {
   resetPassword: (email: string) => Promise<void>;
   clearError: () => void;
   resendVerificationEmail: (email: string) => Promise<boolean>;
+  getUserProfile: () => Promise<UserProfile | null>;
+  createUserProfile: (profileData: {
+    nickname: string;
+    age: number;
+    gender: string;
+    is_single: boolean;
+    has_child: boolean;
+    tags: string[];
+  }) => Promise<UserProfile>;
 }
