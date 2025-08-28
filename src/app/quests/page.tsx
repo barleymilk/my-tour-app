@@ -8,6 +8,7 @@ import QuestModal from "@/components/QuestModal";
 import MissionModal from "@/components/MissionModal";
 import RewardModal from "@/components/RewardModal";
 import { useState } from "react";
+import Navigation from "@/components/Navigation";
 
 export default function QuestsPage() {
   const [isQuestModalOpen, setIsQuestModalOpen] = useState(false);
@@ -29,7 +30,7 @@ export default function QuestsPage() {
           <h2 className="text-xl font-bold text-center mb-4">
             진행 중인 퀘스트
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {inProgressQuests.map((quest) => (
               <Card
                 key={quest.quest_id}
@@ -127,6 +128,7 @@ export default function QuestsPage() {
           onClose={() => setIsRewardModalOpen(false)}
         />
       </main>
+      <Navigation />
     </>
   );
 }

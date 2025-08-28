@@ -12,7 +12,7 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 // import { Avatar, AvatarImage, AvatarFallback } from "@/components/ui/avatar";
-import { Menu, ArrowLeft, LogOut, User } from "lucide-react";
+import { Menu, ArrowLeft, LogOut, User, Home } from "lucide-react";
 // import { useTheme } from "next-themes";
 import { useRouter } from "next/navigation";
 // import { useAuth } from "@/contexts/AuthContext";
@@ -26,7 +26,7 @@ interface HeaderProps {
 
 export default function Header({
   back = false,
-  title = "타이틀",
+  title = "My Tour App",
   onBack = () => {},
   onHomeClick,
 }: HeaderProps) {
@@ -70,11 +70,13 @@ export default function Header({
             </>
           ) : (
             <div className="flex items-center gap-2">
-              <SheetTrigger asChild>
-                <Button variant="ghost" size="icon">
-                  <Menu className="w-5 h-5" />
-                </Button>
-              </SheetTrigger>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => handleNavigation("/")}
+              >
+                <Home />
+              </Button>
             </div>
           )}
 
@@ -82,26 +84,6 @@ export default function Header({
           <h1 className="text-md font-semibold absolute left-1/2 -translate-x-1/2">
             {title}
           </h1>
-          <div className="flex items-center gap-2">
-            {/* 사용자 정보 및 로그아웃 */}
-            <div className="flex items-center gap-2">
-              <div className="flex items-center space-x-2 text-sm">
-                <User className="h-4 w-4 text-gray-500" />
-                <span className="text-gray-700 dark:text-gray-300 hidden sm:inline">
-                  {/* {user?.name || user?.email || "사용자"} */}
-                </span>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={handleLogout}
-                className="flex items-center space-x-1 h-8 px-2"
-              >
-                <LogOut className="h-3 w-3" />
-                <span className="hidden sm:inline">로그아웃</span>
-              </Button>
-            </div>
-          </div>
         </div>
 
         {/* 사이드 메뉴 */}

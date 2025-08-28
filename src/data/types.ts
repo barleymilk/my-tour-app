@@ -70,6 +70,71 @@ export type MissionCompletion = {
   additional_conditions?: string[]; // 추가 조건들
 };
 
+// 친구 관련 타입들
+export type FriendStatus = "pending" | "accepted" | "blocked";
+
+export type Friend = {
+  friend_id: string;
+  user_id: string;
+  friend_user_id: string;
+  friend_username: string;
+  friend_avatar_url?: string;
+  friend_level: number;
+  status: FriendStatus;
+  created_at: string;
+  updated_at: string;
+};
+
+export type FriendRequest = {
+  request_id: string;
+  from_user_id: string;
+  to_user_id: string;
+  from_username: string;
+  from_avatar_url?: string;
+  message?: string;
+  status: "pending" | "accepted" | "rejected";
+  created_at: string;
+  updated_at: string;
+};
+
+export type SharedQuest = {
+  shared_quest_id: string;
+  quest_id: string;
+  quest_title: string;
+  shared_by_user_id: string;
+  shared_with_user_id: string;
+  status: "active" | "completed" | "abandoned";
+  progress: number; // 0-100
+  created_at: string;
+  completed_at?: string;
+};
+
+export type ChatMessage = {
+  message_id: string;
+  chat_room_id: string;
+  sender_id: string;
+  sender_username: string;
+  sender_avatar_url?: string;
+  content: string;
+  message_type: "text" | "image" | "location" | "quest_invite";
+  metadata?: {
+    image_url?: string;
+    location?: { lat: number; lng: number; place_name?: string };
+    quest_id?: string;
+  };
+  created_at: string;
+  read_at?: string;
+};
+
+export type ChatRoom = {
+  chat_room_id: string;
+  participants: string[]; // user_id 배열
+  last_message?: ChatMessage;
+  unread_count: number;
+  created_at: string;
+  updated_at: string;
+};
+
 export type Mission = {
   mission_id: string;
   title: string;

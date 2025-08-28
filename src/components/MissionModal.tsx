@@ -15,6 +15,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Mission, InputType, InputCondition } from "@/data";
+import dynamic from "next/dynamic";
+
+// Lottie 컴포넌트를 동적으로 import
+const TrophyLottie = dynamic(() => import("@/components/lottie/trophy"), {
+  ssr: false,
+  loading: () => (
+    <div className="w-32 h-32 bg-gray-200 rounded-lg animate-pulse" />
+  ),
+});
 
 interface MissionModalProps {
   isOpen: boolean;
@@ -34,6 +43,7 @@ const MissionModal = ({
 }: MissionModalProps) => {
   const [inputs, setInputs] = useState<Record<string, unknown>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showTrophy, setShowTrophy] = useState(false);
 
   if (!isOpen || !mission) return null;
 
@@ -54,15 +64,47 @@ const MissionModal = ({
         await onMissionComplete(mission.mission_id, inputs);
       }
 
-      // 성공 후 모달 닫기
-      onClose();
-      setInputs({});
+      // 트로피 애니메이션 표시
+      setShowTrophy(true);
+
+      // 3초 후 모달 닫기
+      setTimeout(() => {
+        setShowTrophy(false);
+        onClose();
+        setInputs({});
+      }, 3000);
     } catch (error) {
       console.error("미션 완료 실패:", error);
+      setIsSubmitting(false);
     } finally {
+      // 성공/실패 상관없이 항상 isSubmitting을 false로 설정
       setIsSubmitting(false);
     }
   };
+
+  // 트로피 화면 렌더링
+  if (showTrophy) {
+    return (
+      <Dialog open={isOpen} onOpenChange={() => {}}>
+        <DialogContent className="max-w-md text-center">
+          <div className="py-8">
+            <div className="mb-4">
+              <TrophyLottie />
+            </div>
+            <h2 className="text-2xl font-bold text-green-600 mb-2">
+              미션 완료!
+            </h2>
+            <p className="text-gray-600">
+              {mission.title}을 성공적으로 완료했습니다!
+            </p>
+            <div className="mt-4 text-sm text-gray-500">
+              잠시 후 자동으로 닫힙니다...
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
+    );
+  }
 
   const renderInputField = (input: InputCondition, index: number) => {
     const inputKey = `input_${index}`;
@@ -78,7 +120,7 @@ const MissionModal = ({
             <Textarea
               id={inputKey}
               placeholder={input.hint || "텍스트를 입력해주세요"}
-              value={inputs[inputKey] || ""}
+              value={(inputs[inputKey] as string) || ""}
               onChange={(e) => handleInputChange(inputKey, e.target.value)}
               minLength={input.min_length}
               maxLength={input.max_length}
@@ -89,7 +131,8 @@ const MissionModal = ({
             )}
             {input.min_length && input.max_length && (
               <p className="text-xs text-gray-500">
-                {inputs[inputKey]?.length || 0} / {input.max_length} 글자
+                {(inputs[inputKey] as string)?.length || 0} / {input.max_length}{" "}
+                글자
               </p>
             )}
           </div>
@@ -106,7 +149,7 @@ const MissionModal = ({
               id={inputKey}
               type="number"
               placeholder={input.hint || "숫자를 입력해주세요"}
-              value={inputs[inputKey] || ""}
+              value={(inputs[inputKey] as number) || ""}
               onChange={(e) =>
                 handleInputChange(inputKey, Number(e.target.value))
               }
@@ -162,7 +205,7 @@ const MissionModal = ({
                     </div>
                   ) : (
                     <div>
-                      <p className="text-lg">📷 사진을 촬영하거나 선택하세요</p>
+                      <p className="text-lg">사진을 촬영하거나 선택하세요</p>
                       <p className="text-sm text-gray-500">
                         {input.file_types?.join(", ") || "이미지 파일"}
                       </p>
@@ -224,7 +267,7 @@ const MissionModal = ({
                     </div>
                   ) : (
                     <div>
-                      <p className="text-lg">🎤 음성을 녹음하거나 선택하세요</p>
+                      <p className="text-lg">�� 음성을 녹음하거나 선택하세요</p>
                       <p className="text-sm text-gray-500">
                         {input.file_types?.join(", ") || "오디오 파일"}
                       </p>
@@ -284,7 +327,7 @@ const MissionModal = ({
               ) : (
                 <Input
                   placeholder={input.quiz.hint || "정답을 입력하세요"}
-                  value={inputs[inputKey] || ""}
+                  value={(inputs[inputKey] as string) || ""}
                   onChange={(e) => handleInputChange(inputKey, e.target.value)}
                 />
               )}
@@ -307,7 +350,7 @@ const MissionModal = ({
               <Input
                 type="number"
                 placeholder="구매 금액을 입력하세요"
-                value={inputs[inputKey] || ""}
+                value={(inputs[inputKey] as number) || ""}
                 onChange={(e) =>
                   handleInputChange(inputKey, Number(e.target.value))
                 }
@@ -321,11 +364,15 @@ const MissionModal = ({
               )}
               {input.purchase_categories && (
                 <div className="flex flex-wrap gap-2">
-                  {input.purchase_categories.map((category) => (
-                    <Badge key={category} variant="secondary">
-                      {category}
-                    </Badge>
-                  ))}
+                  {input.quiz?.hint && (
+                    <div className="flex flex-wrap gap-2">
+                      {input.purchase_categories.map((category) => (
+                        <Badge key={category} variant="secondary">
+                          {category}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
@@ -351,15 +398,23 @@ const MissionModal = ({
       // 타입별 유효성 검사
       switch (input.type) {
         case "text":
-          if (input.min_length && value.length < input.min_length) return false;
-          if (input.max_length && value.length > input.max_length) return false;
+          const textValue = value as string;
+          if (input.min_length && textValue.length < input.min_length)
+            return false;
+          if (input.max_length && textValue.length > input.max_length)
+            return false;
           break;
         case "number":
-          if (input.min_value && value < input.min_value) return false;
-          if (input.max_value && value > input.max_value) return false;
+          const numValue = value as number;
+          if (input.min_value && numValue < input.min_value) return false;
+          if (input.max_value && numValue > input.max_value) return false;
           break;
         case "purchase":
-          if (input.purchase_min_amount && value < input.purchase_min_amount)
+          const purchaseValue = value as number;
+          if (
+            input.purchase_min_amount &&
+            purchaseValue < input.purchase_min_amount
+          )
             return false;
           break;
       }
@@ -432,25 +487,6 @@ const MissionModal = ({
             )}
           </div>
         )}
-
-        {/* 추가 조건 */}
-        {mission.completion.additional_conditions &&
-          mission.completion.additional_conditions.length > 0 && (
-            <Card className="mt-6">
-              <CardHeader>
-                <CardTitle className="text-sm">📝 추가 조건</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <ul className="list-disc list-inside space-y-1 text-sm text-gray-600">
-                  {mission.completion.additional_conditions.map(
-                    (condition, index) => (
-                      <li key={index}>{condition}</li>
-                    )
-                  )}
-                </ul>
-              </CardContent>
-            </Card>
-          )}
 
         {/* 미션 완료 팁 */}
         {mission.tips && mission.tips.length > 0 && (

@@ -51,6 +51,8 @@ const QuestModal = ({
 
   const { progress, total } = getQuestProgress(quest?.quest_id || "");
 
+  console.log("@@@@@@@@", quest?.npc_image_url);
+
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-h-[80vh] overflow-y-auto">
@@ -82,15 +84,14 @@ const QuestModal = ({
 
         <div className="flex flex-col gap-4">
           {/* NPC 정보 */}
-          {quest?.npc_image_url && (
-            <Image
-              src={quest.npc_image_url}
-              alt={quest.npc_name || ""}
-              width={100}
-              height={100}
-              className="w-full rounded-lg"
-            />
-          )}
+          <Image
+            src={quest?.npc_image_url || "/images/npc/adventure.png"}
+            alt={quest?.npc_name || "NPC"}
+            width={100}
+            height={100}
+            className="w-full rounded-lg"
+            unoptimized
+          />
           <Card>
             <CardHeader>
               <CardTitle className="flex items-center gap-2">

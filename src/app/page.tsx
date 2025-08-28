@@ -11,6 +11,7 @@ import QuestModal from "@/components/QuestModal";
 import RewardModal from "@/components/RewardModal";
 import MissionModal from "@/components/MissionModal";
 import { Quest, Mission, quests, inProgressQuests, badges } from "@/data";
+import Navigation from "@/components/Navigation";
 
 export default function Home() {
   const [selectedQuest, setSelectedQuest] = useState<Quest | null>(null);
@@ -30,19 +31,11 @@ export default function Home() {
     <>
       <Header title="My Tour App" />
       <main className="mx-6 pb-24 pt-6">
-        <div className="flex items-center gap-2">
-          <Input
-            placeholder="Search..."
-            className="rounded-full h-12 bg-white"
-          />
-          <Button className="h-12">Search</Button>
-        </div>
-
         <div className="mt-6 mb-16 rounded-lg">
           <h2 className="text-xl font-bold text-center mb-4">
-            진행 중인 퀘스트
+            🎯 진행 중인 퀘스트
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
+          <div className="grid grid-cols-1 gap-4">
             {inProgressQuests.map((quest) => (
               <Card
                 key={quest.quest_id}
@@ -90,7 +83,7 @@ export default function Home() {
         </div>
 
         <div className="mt-6 mb-16 rounded-lg">
-          <h2 className="text-xl font-bold text-center mb-4">추천 퀘스트</h2>
+          <h2 className="text-xl font-bold text-center mb-4">🎯 추천 퀘스트</h2>
           <ScrollArea className="w-full max-w-2xl">
             <div className="flex w-max space-x-4">
               {quests.map((quest) => (
@@ -121,29 +114,89 @@ export default function Home() {
           </ScrollArea>
         </div>
 
-        <div className="mt-6 mb-6 bg-white rounded-lg p-6">
+        <div className="mt-6 mb-16 bg-white rounded-lg ">
           <h2 className="text-xl font-bold text-center mb-4 text-black">
-            배지 현황
+            🏆 배지 현황
           </h2>
           <ScrollArea className="w-full">
-            <div className="flex gap-4 w-max py-2">
+            <div className="flex w-max space-x-4">
               {badges.map((badge) => (
                 <div
                   key={badge.badge_id}
-                  className="rounded-full border-4 border-primary w-18 h-18 p-2 flex-shrink-0"
+                  className="text-center p-3 border rounded-lg"
                 >
-                  <Image
-                    src={badge.image_url}
-                    alt={badge.title}
-                    width={64}
-                    height={64}
-                    className="w-full h-full object-contain"
-                  />
+                  <div className="text-3xl mb-2 w-18 h-18 flex items-center justify-center">
+                    <Image
+                      src={badge.image_url}
+                      alt={badge.title}
+                      width={64}
+                      height={64}
+                      className="w-full h-full object-contain"
+                    />
+                  </div>
+                  <p className="font-semibold text-sm">{badge.title}</p>
+                  <p className="text-xs text-gray-600">{badge.description}</p>
                 </div>
               ))}
             </div>
             <ScrollBar orientation="horizontal" />
           </ScrollArea>
+        </div>
+
+        {/* 친구 기능 섹션 */}
+        <div className="mt-6 mb-6 bg-white rounded-lg">
+          <h2 className="text-xl font-bold text-center mb-4 text-black">
+            👥 친구와 함께
+          </h2>
+          <div className="grid grid-cols-1 gap-4">
+            <Card
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => (window.location.href = "/friends")}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-center">
+                  👥 친구 목록
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 text-center">
+                  친구를 추가하고 관리하세요
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => (window.location.href = "/friends/shared-quests")}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-center">
+                  🎯 공유 퀘스트
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 text-center">
+                  친구와 함께 퀘스트를 진행하세요
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card
+              className="hover:shadow-lg transition-shadow cursor-pointer"
+              onClick={() => (window.location.href = "/friends/chat")}
+            >
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2 text-center">
+                  💬 채팅
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-gray-600 text-center">
+                  친구와 소통하고 정보를 공유하세요
+                </p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
         <QuestModal
@@ -170,6 +223,8 @@ export default function Home() {
           isOpen={isRewardModalOpen}
           onClose={() => setIsRewardModalOpen(false)}
         />
+
+        <Navigation />
       </main>
     </>
   );
