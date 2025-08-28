@@ -33,6 +33,7 @@ interface MissionModalProps {
     missionId: string,
     inputs: Record<string, unknown>
   ) => void;
+  onMissionStatusUpdate?: (missionId: string, status: string) => void; // ✅ 추가
 }
 
 const MissionModal = ({
@@ -40,6 +41,7 @@ const MissionModal = ({
   onClose,
   mission,
   onMissionComplete,
+  onMissionStatusUpdate,
 }: MissionModalProps) => {
   const [inputs, setInputs] = useState<Record<string, unknown>>({});
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -64,6 +66,11 @@ const MissionModal = ({
       // 미션 완료 처리
       if (onMissionComplete) {
         await onMissionComplete(mission.mission_id, inputs);
+      }
+
+      // 미션 상태를 completed로 업데이트
+      if (onMissionStatusUpdate) {
+        await onMissionStatusUpdate(mission.mission_id, "completed");
       }
 
       // 트로피 애니메이션 표시
@@ -340,7 +347,8 @@ const MissionModal = ({
                 이 미션은 특별한 입력이 필요하지 않습니다
               </p>
               <p className="text-blue-600 text-sm mt-1">
-                미션을 완료했다고 생각되시면 "미션 완료" 버튼을 클릭하세요
+                미션을 완료했다고 생각되시면 &quot;미션 완료&quot; 버튼을
+                클릭하세요
               </p>
             </div>
           </div>

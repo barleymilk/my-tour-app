@@ -446,9 +446,9 @@ export const quests: Quest[] = [
         mission_id: "MR-GYJ-001-02",
         title: "밤을 밝히는 등불",
         description:
-          "동궁과 월지 연못에 비치는 달빛을 보며 두 번째 단서를 얻으세요.",
+          "동궁과월지 연못에 비치는 달빛을 보며 두 번째 단서를 얻으세요.",
         place_id: "PL-GYJ-002",
-        place_name: "동궁과 월지",
+        place_name: "동궁과월지",
         coordinates: { lat: 35.834, lng: 129.219 },
         type: "GPS_AND_PHOTO" as MissionType,
         condition: "동궁과 월지 야간 투어 참여 후, 아름다운 야경 사진 업로드",

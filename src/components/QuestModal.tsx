@@ -19,6 +19,15 @@ interface QuestModalProps {
   quest: Quest | null;
   onRewardClick: () => void;
   onMissionClick: (mission: Mission) => void;
+  userMissions?: Array<{
+    id: string;
+    mission_id: string;
+    status: string;
+    missions: {
+      id: string;
+      quest_id: string;
+    };
+  }>;
 }
 
 const QuestModal = ({
@@ -27,26 +36,41 @@ const QuestModal = ({
   quest,
   onRewardClick,
   onMissionClick,
+  userMissions,
 }: QuestModalProps) => {
   if (!isOpen) return null;
 
-  // 진행률 계산
+  // 진행률 계산 (userMissions 기반)
   const getQuestProgress = (questId: string) => {
-    const progressQuest = inProgressQuests.find((q) => q.quest_id === questId);
-    return progressQuest
-      ? { progress: progressQuest.progress, total: progressQuest.total }
-      : { progress: 0, total: quest?.missions.length || 0 };
+    if (!userMissions || !quest?.missions) {
+      return { progress: 0, total: 0 };
+    }
+
+    // 해당 퀘스트의 미션들만 필터링
+    const questMissions = userMissions.filter(
+      (m) => m.missions.quest_id === questId
+    );
+
+    // 완료된 미션 수 계산
+    const completedCount = questMissions.filter(
+      (m) => m.status === "completed"
+    ).length;
+
+    // 전체 미션 수
+    const totalCount = quest.missions.length;
+
+    return {
+      progress: completedCount,
+      total: totalCount,
+    };
   };
 
-  // 미션 상태 확인
-  const getMissionStatus = (missionId: string, questId: string) => {
-    const progressQuest = inProgressQuests.find((q) => q.quest_id === questId);
-    if (!progressQuest) return "waiting";
+  // 미션 상태 확인 (userMissions에서 가져오기)
+  const getMissionStatus = (missionId: string) => {
+    if (!userMissions) return "waiting";
 
-    if (progressQuest.completed_missions.includes(missionId))
-      return "completed";
-    if (missionId === progressQuest.current_mission) return "current";
-    return "waiting";
+    const userMission = userMissions.find((m) => m.missions.id === missionId);
+    return userMission ? userMission.status : "waiting";
   };
 
   const { progress, total } = getQuestProgress(quest?.quest_id || "");
@@ -148,28 +172,32 @@ const QuestModal = ({
             <h3 className="text-xl mb-2 font-semibold">📋 미션 목록</h3>
             <div>
               <div className="space-y-3 ">
-                {quest?.missions.map((missionItem) => {
-                  const status = getMissionStatus(
-                    missionItem.mission_id,
-                    quest.quest_id
-                  );
-                  return (
-                    <div
-                      key={missionItem.mission_id}
-                      className="flex items-center gap-3 p-3 border rounded-lg bg-white"
-                      onClick={() => {
-                        onMissionClick(missionItem);
-                      }}
-                    >
-                      {/* 미션 정보 */}
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2">
+                {quest?.missions
+                  .sort((a, b) => a.order - b.order)
+                  .map((missionItem) => {
+                    const status = getMissionStatus(missionItem.mission_id);
+                    console.log(
+                      "###missionItem",
+                      missionItem,
+                      "status:",
+                      status
+                    );
+                    return (
+                      <div
+                        key={missionItem.mission_id}
+                        className="flex items-center gap-3 p-3 border rounded-lg bg-white cursor-pointer hover:bg-gray-50"
+                        onClick={() => {
+                          onMissionClick(missionItem);
+                        }}
+                      >
+                        {/* 미션 상태 아이콘 */}
+                        <div className="flex-shrink-0">
                           {status === "completed" && (
                             <div className="w-6 h-6 bg-green-500 rounded-full flex items-center justify-center">
                               <span className="text-white text-xs">✓</span>
                             </div>
                           )}
-                          {status === "current" && (
+                          {status === "active" && (
                             <div className="w-6 h-6 bg-blue-500 rounded-full flex items-center justify-center">
                               <span className="text-white text-xs">●</span>
                             </div>
@@ -179,6 +207,10 @@ const QuestModal = ({
                               <span className="text-gray-600 text-xs">○</span>
                             </div>
                           )}
+                        </div>
+
+                        {/* 미션 정보 */}
+                        <div className="flex-1">
                           <div className="flex items-center gap-2">
                             <h4 className="font-medium text-gray-900">
                               {missionItem.title}
@@ -187,18 +219,17 @@ const QuestModal = ({
                               #{missionItem.order}
                             </span>
                           </div>
-                        </div>
-                        <p className="text-sm text-gray-600 mt-1">
-                          {missionItem.description}
-                        </p>
-                        <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
-                          <span>📍 {missionItem.place_name}</span>
-                          <span>⏱️ {missionItem.type}</span>
+                          <p className="text-sm text-gray-600 mt-1">
+                            {missionItem.description}
+                          </p>
+                          <div className="flex items-center gap-4 mt-2 text-xs text-gray-500">
+                            <span>📍 {missionItem.place_name}</span>
+                            <span>⏱️ {missionItem.type}</span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  );
-                })}
+                    );
+                  })}
               </div>
             </div>
           </div>

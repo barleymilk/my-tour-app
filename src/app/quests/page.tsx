@@ -3,6 +3,7 @@ import Header from "@/components/Header";
 import { ScrollArea, ScrollBar } from "@/components/ui/scroll-area";
 import { Button } from "@/components/ui/button";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { inProgressQuests, quests, Mission, Quest } from "@/data";
 import QuestModal from "@/components/QuestModal";
 import MissionModal from "@/components/MissionModal";
@@ -63,6 +64,15 @@ interface UserMission {
   };
 }
 
+interface RecommendedQuest {
+  id: string;
+  title: string;
+  description: string;
+  npc_name: string;
+  npc_dialogue: string;
+  estimated_time: string;
+}
+
 export default function QuestsPage() {
   const { user } = useAuth();
   const [isQuestModalOpen, setIsQuestModalOpen] = useState(false);
@@ -75,6 +85,11 @@ export default function QuestsPage() {
   const [userQuests, setUserQuests] = useState<UserQuest[]>([]);
   const [userMissions, setUserMissions] = useState<UserMission[]>([]);
 
+  // 추천 퀘스트 상태
+  const [recommendedQuests, setRecommendedQuests] = useState<
+    RecommendedQuest[]
+  >([]);
+
   // 퀴즈 관련 상태
   const [isQuizModalOpen, setIsQuizModalOpen] = useState(false);
   const [selectedQuizMission, setSelectedQuizMission] =
@@ -85,6 +100,27 @@ export default function QuestsPage() {
 
   const handleQuestClick = (quest: Quest | null) => {
     setSelectedQuest(quest);
+    setIsQuestModalOpen(true);
+  };
+
+  // 추천 퀘스트 클릭 처리
+  const handleRecommendedQuestClick = (recommendedQuest: RecommendedQuest) => {
+    // 추천 퀘스트를 Quest 타입으로 변환
+    const questData: Quest = {
+      quest_id: recommendedQuest.id,
+      title: recommendedQuest.title,
+      description: recommendedQuest.description,
+      npc_name: recommendedQuest.npc_name,
+      npc_image_url: "", // 필요시 추가
+      npc_dialogue: recommendedQuest.npc_dialogue,
+      user_role: "", // 필요시 추가
+      region: "", // 필요시 추가
+      estimated_time: recommendedQuest.estimated_time,
+      image_url: "", // 필요시 추가
+      missions: [], // 추천 퀘스트는 아직 미션이 없음
+    };
+
+    setSelectedQuest(questData);
     setIsQuestModalOpen(true);
   };
 
@@ -247,6 +283,26 @@ export default function QuestsPage() {
           });
         });
       }
+
+      // 4. 추천 퀘스트 조회 (진행 중인 퀘스트 제외)
+      const { data: allQuestsData, error: allQuestsError } = await supabase
+        .from("quests")
+        .select("*");
+
+      if (allQuestsError) {
+        console.error("전체 퀘스트 조회 실패:", allQuestsError);
+      } else if (allQuestsData && userQuestsData) {
+        // 진행 중인 퀘스트 ID 목록
+        const inProgressQuestIds = userQuestsData.map((q) => q.quest_id);
+
+        // 진행 중인 퀘스트를 제외한 추천 퀘스트
+        const recommended = allQuestsData.filter(
+          (quest) => !inProgressQuestIds.includes(quest.id)
+        );
+
+        console.log("📋 추천 퀘스트 데이터:", recommended);
+        setRecommendedQuests(recommended);
+      }
     };
 
     getUserQuests();
@@ -256,140 +312,184 @@ export default function QuestsPage() {
     <>
       <Header title="My Tour App" />
       <main className="mx-6 pb-24 pt-6">
-        <div className="mb-16 rounded-lg">
-          <h2 className="text-xl font-bold text-center mb-4">
-            진행 중인 퀘스트
-          </h2>
-          <div className="grid grid-cols-1 gap-4">
-            {userQuests && userQuests.length > 0 ? (
-              userQuests.map((userQuest) => (
-                <Card
-                  key={userQuest.id}
-                  onClick={() => {
-                    // 데이터베이스에서 가져온 퀘스트 데이터를 Quest 타입으로 변환
-                    const questData: Quest = {
-                      quest_id: userQuest.quest_id,
-                      title: userQuest.quests?.title || "퀘스트 제목 없음",
-                      description: userQuest.quests?.description || "설명 없음",
-                      npc_name: userQuest.quests?.npc_name || "NPC 없음",
-                      npc_image_url: "", // 필요시 추가
-                      npc_dialogue:
-                        userQuest.quests?.npc_dialogue || "대화 내용 없음",
-                      user_role: "", // 필요시 추가
-                      region: "", // 필요시 추가
-                      estimated_time:
-                        userQuest.quests?.estimated_time || "미정",
-                      image_url: "", // 필요시 추가
-                      missions: userMissions
-                        .filter(
-                          (m) => m.missions.quest_id === userQuest.quest_id
-                        )
-                        .map((m) => ({
-                          mission_id: m.missions.id,
-                          title: m.missions.title,
-                          description: m.missions.description,
-                          place_id: m.missions.attraction_id || "",
-                          place_name:
-                            m.missions.attractions?.name || "장소명 없음",
-                          coordinates: {
-                            lat: m.missions.attractions?.latitude || 0,
-                            lng: m.missions.attractions?.longitude || 0,
-                          },
-                          type: m.missions.type,
-                          condition: m.missions.condition,
-                          order: m.missions.order,
-                          reward_badge_id: "", // 필요시 추가
-                          completion: {
-                            gps_required: true,
-                            inputs: [],
-                          },
-                          difficulty: m.missions.difficulty as
-                            | "easy"
-                            | "medium"
-                            | "hard",
-                          estimated_duration: 0, // 필요시 추가
-                          // 퀴즈 데이터 추가
-                          quiz: m.missions.quiz
-                            ? {
-                                id: m.missions.quiz.id,
-                                type: m.missions.quiz.type,
-                                question: m.missions.quiz.question,
-                                options: m.missions.quiz.options,
-                                answer: m.missions.quiz.answer,
-                                hint: m.missions.quiz.hint,
-                                explanation: m.missions.quiz.explanation,
-                              }
-                            : undefined,
-                        })),
-                    };
+        <Tabs defaultValue="in-progress" className="w-full">
+          <TabsList className="grid w-full grid-cols-2 mb-6">
+            <TabsTrigger value="in-progress">진행 중인 퀘스트</TabsTrigger>
+            <TabsTrigger value="recommended">추천 퀘스트</TabsTrigger>
+          </TabsList>
 
-                    // 실제 데이터베이스 데이터를 selectedQuest에 설정
-                    setSelectedQuest(questData);
-                    setIsQuestModalOpen(true);
-                  }}
-                  className="cursor-pointer hover:shadow-md transition-shadow"
-                >
-                  <CardHeader>
-                    <CardTitle className="flex items-center justify-between">
-                      <p className="w-[80%] text-lg truncate">
-                        {userQuest.quests?.title || "퀘스트 제목 없음"}
-                      </p>
-                      <p className="w-[20%] text-sm text-gray-500 text-right">
-                        {
-                          userMissions.filter(
-                            (m) =>
-                              m.missions.quest_id === userQuest.quest_id &&
-                              m.status === "completed"
-                          ).length
-                        }{" "}
-                        /{" "}
-                        {
-                          userMissions.filter(
+          {/* 진행 중인 퀘스트 탭 */}
+          <TabsContent value="in-progress" className="space-y-4">
+            <div className="grid grid-cols-1 gap-4">
+              {userQuests && userQuests.length > 0 ? (
+                userQuests.map((userQuest) => (
+                  <Card
+                    key={userQuest.id}
+                    onClick={() => {
+                      // 데이터베이스에서 가져온 퀘스트 데이터를 Quest 타입으로 변환
+                      const questData: Quest = {
+                        quest_id: userQuest.quest_id,
+                        title: userQuest.quests?.title || "퀘스트 제목 없음",
+                        description:
+                          userQuest.quests?.description || "설명 없음",
+                        npc_name: userQuest.quests?.npc_name || "NPC 없음",
+                        npc_image_url: "", // 필요시 추가
+                        npc_dialogue:
+                          userQuest.quests?.npc_dialogue || "대화 내용 없음",
+                        user_role: "", // 필요시 추가
+                        region: "", // 필요시 추가
+                        estimated_time:
+                          userQuest.quests?.estimated_time || "미정",
+                        image_url: "", // 필요시 추가
+                        missions: userMissions
+                          .filter(
                             (m) => m.missions.quest_id === userQuest.quest_id
-                          ).length
-                        }
-                      </p>
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex flex-col gap-2">
-                      {/* 진행 중인 미션 중 순서가 앞선 미션 */}
-                      <p className="text-md font-bold">
-                        {userMissions
-                          .filter(
-                            (m) =>
-                              m.missions.quest_id === userQuest.quest_id &&
-                              m.status === "active"
                           )
-                          .sort(
-                            (a, b) => a.missions.order - b.missions.order
-                          )[0]?.missions?.title || "진행 중인 미션 없음"}
-                      </p>
-                      <p className="text-sm text-gray-500 pt-2">
-                        {userMissions
-                          .filter(
-                            (m) =>
-                              m.missions.quest_id === userQuest.quest_id &&
-                              m.status === "active"
-                          )
-                          .sort(
-                            (a, b) => a.missions.order - b.missions.order
-                          )[0]?.missions?.condition || "미션 설명 없음"}
-                      </p>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))
-            ) : (
-              <div className="text-center py-8 text-gray-500">
-                <p className="text-lg font-medium">
-                  진행 중인 퀘스트가 없습니다
-                </p>
-                <p className="text-sm">새로운 퀘스트를 시작해보세요!</p>
-              </div>
-            )}
-          </div>
-        </div>
+                          .map((m) => ({
+                            mission_id: m.missions.id,
+                            title: m.missions.title,
+                            description: m.missions.description,
+                            place_id: m.missions.attraction_id || "",
+                            place_name:
+                              m.missions.attractions?.name || "장소명 없음",
+                            coordinates: {
+                              lat: m.missions.attractions?.latitude || 0,
+                              lng: m.missions.attractions?.longitude || 0,
+                            },
+                            type: m.missions.type,
+                            condition: m.missions.condition,
+                            order: m.missions.order,
+                            reward_badge_id: "", // 필요시 추가
+                            completion: {
+                              gps_required: true,
+                              inputs: [],
+                            },
+                            difficulty: m.missions.difficulty as
+                              | "easy"
+                              | "medium"
+                              | "hard",
+                            estimated_duration: 0, // 필요시 추가
+                            // 퀴즈 데이터 추가
+                            quiz: m.missions.quiz
+                              ? {
+                                  id: m.missions.quiz.id,
+                                  type: m.missions.quiz.type,
+                                  question: m.missions.quiz.question,
+                                  options: m.missions.quiz.options,
+                                  answer: m.missions.quiz.answer,
+                                  hint: m.missions.quiz.hint,
+                                  explanation: m.missions.quiz.explanation,
+                                }
+                              : undefined,
+                          })),
+                      };
+
+                      // 실제 데이터베이스 데이터를 selectedQuest에 설정
+                      setSelectedQuest(questData);
+                      setIsQuestModalOpen(true);
+                    }}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                  >
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <p className="w-[80%] text-lg truncate">
+                          {userQuest.quests?.title || "퀘스트 제목 없음"}
+                        </p>
+                        <p className="w-[20%] text-sm text-gray-500 text-right">
+                          {
+                            userMissions.filter(
+                              (m) =>
+                                m.missions.quest_id === userQuest.quest_id &&
+                                m.status === "completed"
+                            ).length
+                          }{" "}
+                          /{" "}
+                          {
+                            userMissions.filter(
+                              (m) => m.missions.quest_id === userQuest.quest_id
+                            ).length
+                          }
+                        </p>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="flex flex-col gap-2">
+                        {/* 진행 중인 미션 중 순서가 앞선 미션 */}
+                        <p className="text-md font-bold">
+                          {userMissions
+                            .filter(
+                              (m) =>
+                                m.missions.quest_id === userQuest.quest_id &&
+                                m.status === "active"
+                            )
+                            .sort(
+                              (a, b) => a.missions.order - b.missions.order
+                            )[0]?.missions?.title || "진행 중인 미션 없음"}
+                        </p>
+                        <p className="text-sm text-gray-500 pt-2">
+                          {userMissions
+                            .filter(
+                              (m) =>
+                                m.missions.quest_id === userQuest.quest_id &&
+                                m.status === "active"
+                            )
+                            .sort(
+                              (a, b) => a.missions.order - b.missions.order
+                            )[0]?.missions?.condition || "미션 설명 없음"}
+                        </p>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p className="text-lg font-medium">
+                    진행 중인 퀘스트가 없습니다
+                  </p>
+                  <p className="text-sm">새로운 퀘스트를 시작해보세요!</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+
+          {/* 추천 퀘스트 탭 */}
+          <TabsContent value="recommended" className="space-y-4">
+            <div className="grid grid-cols-1 gap-4">
+              {recommendedQuests && recommendedQuests.length > 0 ? (
+                recommendedQuests.map((quest) => (
+                  <Card
+                    key={quest.id}
+                    onClick={() => handleRecommendedQuestClick(quest)}
+                    className="cursor-pointer hover:shadow-md transition-shadow"
+                  >
+                    <CardHeader>
+                      <CardTitle className="text-lg">{quest.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-3">
+                        <p className="text-sm text-gray-600">
+                          {quest.description}
+                        </p>
+                        <div className="flex items-center gap-4 text-xs text-gray-500">
+                          <span>👤 {quest.npc_name}</span>
+                          <span>⏱️ {quest.estimated_time}</span>
+                        </div>
+                        <Button className="w-full mt-3">퀘스트 시작하기</Button>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
+              ) : (
+                <div className="text-center py-8 text-gray-500">
+                  <p className="text-lg font-medium">
+                    추천할 퀘스트가 없습니다
+                  </p>
+                  <p className="text-sm">모든 퀘스트를 진행 중입니다!</p>
+                </div>
+              )}
+            </div>
+          </TabsContent>
+        </Tabs>
 
         {/* <div className="mt-6 mb-16 rounded-lg">
           <h2 className="text-xl font-bold text-center mb-4">추천 퀘스트</h2>
@@ -432,26 +532,65 @@ export default function QuestsPage() {
             // QuestModal은 열린 상태로 유지
           }}
           onMissionClick={(mission) => {
-            // 퀴즈 타입인 경우 퀴즈 모달 열기
-            if (mission.type === "GPS_AND_QUIZ") {
-              const userMission = userMissions.find(
-                (m) => m.missions.id === mission.mission_id
-              );
-              if (userMission) {
-                openQuizModal(userMission);
-              }
-            } else {
-              // 일반 미션인 경우 미션 모달 열기
-              setSelectedMission(mission);
-              setIsMissionModalOpen(true);
+            // 해당 미션의 user_missions 상태 확인
+            const userMission = userMissions.find(
+              (m) => m.missions.id === mission.mission_id
+            );
+
+            // 미션이 완료된 경우 모달을 열지 않음
+            if (userMission?.status === "completed") {
+              console.log("이미 완료된 미션입니다:", mission.title);
+              return;
             }
+
+            setSelectedMission(mission);
+            setIsMissionModalOpen(true);
           }}
+          userMissions={userMissions}
         />
 
         <MissionModal
           isOpen={isMissionModalOpen}
-          onClose={() => setIsMissionModalOpen(false)}
+          onClose={() => {
+            console.log("MissionModal 닫기 - QuestModal 상태 유지");
+            setIsMissionModalOpen(false);
+            setIsQuestModalOpen(true);
+            // QuestModal은 열린 상태로 유지
+          }}
           mission={selectedMission}
+          onMissionComplete={async (missionId, inputs) => {
+            console.log("미션 완료:", { missionId, inputs });
+            // 여기에 미션 완료 로직 추가
+          }}
+          onMissionStatusUpdate={async (missionId, status) => {
+            console.log("미션 상태 업데이트:", { missionId, status });
+
+            try {
+              // Supabase에서 user_missions 테이블 업데이트
+              const { error } = await supabase
+                .from("user_missions")
+                .update({ status: status })
+                .eq("mission_id", missionId)
+                .eq("user_id", user?.id);
+
+              if (error) {
+                console.error("미션 상태 업데이트 실패:", error);
+                throw error;
+              }
+
+              // 로컬 상태 업데이트
+              setUserMissions((prev) =>
+                prev.map((m) =>
+                  m.missions.id === missionId ? { ...m, status: status } : m
+                )
+              );
+
+              console.log("미션 상태 업데이트 성공:", { missionId, status });
+            } catch (error) {
+              console.error("미션 상태 업데이트 중 오류:", error);
+              throw error;
+            }
+          }}
         />
 
         <RewardModal
